@@ -1,7 +1,7 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#include "MotorDriver.h"
+#include "../motorLib/MotorDriver.h"
 
 #define MAX_SPEED 70 //Used to prevent overvoltage of motors
 #define MIN_SPEED 0 //Minimum speed at which the robot actually moves

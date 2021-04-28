@@ -7,6 +7,7 @@
     <groupId>ch.heigvd.robotpi</groupId>
     <artifactId>ClientAppRobotPi</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -72,7 +73,7 @@
                             </transformer>
                         </transformers>
                         <shadedArtifactAttached>true</shadedArtifactAttached>
-                        <shadedClassifierName>launcher</shadedClassifierName>
+                        <shadedClassifierName>Final</shadedClassifierName>
                     </configuration>
                 </execution>
             </executions>
@@ -102,6 +103,16 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.7.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.18</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jmetro</artifactId>
+            <version>11.6.14</version>
         </dependency>
     </dependencies>
 

@@ -1,5 +1,9 @@
 build/
 bin/
+test_bin/
+test_build/
+
+.idea/
 
 .cproject
 .settings

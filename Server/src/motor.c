@@ -1,4 +1,4 @@
-#include "motor.h"
+#include "include/motor.h"
 
 void setMotor(char motor, signed char velocity)
 {
