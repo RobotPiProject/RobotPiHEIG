@@ -38,6 +38,7 @@ LIBOBJS = $(addprefix $(OBJ_DIR)/, $(LIBSRCS:.c=.o))
 
 .PHONY: clean
 .PHONY: lib
+.PHONY: install_libs
 
 all: $(OUT_DIR)/$(APPNAME) $(TEST_OUT_DIR)/$(TEST_APPNAME)
 
@@ -74,8 +75,11 @@ new_file:
 	@read fileName; \
 	touch src/$$fileName.c src/include/$$fileName.h test/test_$$fileName.c
 
-lib: $(LIBNAME)
+lib: install_libs $(LIBNAME)
+
+install_libs:
+	cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
+	cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
 
 $(LIBNAME): $(LIBOBJS)
 	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)
-	cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
