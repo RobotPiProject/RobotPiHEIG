@@ -10,7 +10,7 @@ import lombok.Getter;
 public enum SettingsParams {
    IP_ADDRESS("ipAddress");
 
-   @Getter private String paramName;
+   @Getter private final String paramName;
 
    SettingsParams(String paramName) {
       this.paramName = paramName;

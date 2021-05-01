@@ -37,7 +37,7 @@ import java.util.concurrent.Semaphore;
 public class UIController {
    //Settings
    private Properties settings;
-   private Semaphore mutex = new Semaphore(1);
+   private final Semaphore mutex = new Semaphore(1);
    private Scene scene;
    private String currentIpAddress;
    private Thread workerThread;
@@ -50,6 +50,8 @@ public class UIController {
    private boolean rightPressed = false;
    private boolean leftPressed = false;
    private boolean downPressed = false;
+
+   private boolean newInstruction = false;
 
    @FXML private Button BFrontLeft;
    @FXML private Button BFront;
@@ -127,37 +129,40 @@ public class UIController {
             if (worker.connected) {
                try {
                   mutex.acquire();
-                  if (upPressed) {
-                     if (leftPressed) {
-                        client.goFrontLeft();
+                  if (newInstruction) {
+                     if (upPressed) {
+                        if (leftPressed) {
+                           client.goFrontLeft();
+                        } else if (rightPressed) {
+                           client.goFrontRight();
+                        } else if (!downPressed) {
+                           client.goForward();
+                        }
+                     } else if (downPressed) {
+                        if (leftPressed) {
+                           client.goBackwardsLeft();
+                        } else if (rightPressed) {
+                           client.goBackwardsRight();
+                        } else {
+                           client.goBackward();
+                        }
+                     } else if (leftPressed) {
+                        if (!rightPressed) {
+                           client.goLeft();
+                        }
                      } else if (rightPressed) {
-                        client.goFrontRight();
-                     } else if (!downPressed) {
-                        client.goForward();
+                        client.goRight();
+                     } else {//robot ne bouge pas
+                        if (client.isMoving()) { //si le robot n'est pas encore immobilisé
+                           client.stop();
+                        }
                      }
-                  } else if (downPressed) {
-                     if (leftPressed) {
-                        client.goBackwardsLeft();
-                     } else if (rightPressed) {
-                        client.goBackwardsRight();
-                     } else {
-                        client.goBackward();
-                     }
-                  } else if (leftPressed) {
-                     if (!rightPressed) {
-                        client.goLeft();
-                     }
-                  } else if (rightPressed) {
-                     client.goRight();
-                  } else {//robot ne bouge pas
-                     if (client.isMoving()) { //si le robot n'est pas encore immobilisé
-                        client.stop();
-                     }
+                  } else {
+                     newInstruction = false;
                   }
                } catch (IOException e) {
                   e.printStackTrace();
                } catch (Client.RobotException e) {
-                  e.printStackTrace();
                   Util.createAlertFrame(Alert.AlertType.ERROR, "Error while trying to move",
                                         "Error while trying to move",
                                         "The robot seems to have had an error while moving. Please check the robot " +
@@ -209,7 +214,7 @@ public class UIController {
 
    @FXML
    private void pressOnClose(ActionEvent event) {
-      ((Stage)LConnectionStatus.getScene().getWindow()).close();
+      ((Stage) LConnectionStatus.getScene().getWindow()).close();
    }
 
    @FXML
@@ -270,45 +275,53 @@ public class UIController {
       BBackwards.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = true;
+            newInstruction = true;
          }
       });
       BBackwardsLeft.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = true;
             leftPressed = true;
+            newInstruction = true;
          }
       });
       BBackwardsRight.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = true;
             rightPressed = true;
+            newInstruction = true;
          }
       });
       BFront.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = true;
+            newInstruction = true;
          }
       });
       BFrontLeft.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = true;
             leftPressed = true;
+            newInstruction = true;
          }
       });
       BFrontRight.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = true;
             rightPressed = true;
+            newInstruction = true;
          }
       });
       BLeft.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             leftPressed = true;
+            newInstruction = true;
          }
       });
       BRight.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             rightPressed = true;
+            newInstruction = true;
          }
       });
 
@@ -316,45 +329,53 @@ public class UIController {
       BBackwards.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = false;
+            newInstruction = true;
          }
       });
       BBackwardsLeft.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = false;
             leftPressed = false;
+            newInstruction = true;
          }
       });
       BBackwardsRight.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             downPressed = false;
             rightPressed = false;
+            newInstruction = true;
          }
       });
       BFront.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = false;
+            newInstruction = true;
          }
       });
       BFrontLeft.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = false;
             leftPressed = false;
+            newInstruction = true;
          }
       });
       BFrontRight.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             upPressed = false;
             rightPressed = false;
+            newInstruction = true;
          }
       });
       BLeft.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             leftPressed = false;
+            newInstruction = true;
          }
       });
       BRight.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             rightPressed = false;
+            newInstruction = true;
          }
       });
 
@@ -388,6 +409,7 @@ public class UIController {
             default:
                break;
          }
+         newInstruction = true;
       });
       scene.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
          switch (keyEvent.getCode()) {
@@ -406,6 +428,7 @@ public class UIController {
             default:
                break;
          }
+         newInstruction = true;
       });
       scene.getRoot().requestFocus();
    }
@@ -424,7 +447,6 @@ public class UIController {
       b.setMaxWidth(i.getFitWidth());
       b.setGraphic(i);
    }
-
 
 
    /**
@@ -474,21 +496,22 @@ public class UIController {
             }
             while (connected) {
                try {
-                  mutex.acquire();
-                  if (!client.isConnected()) {
-                     connected = false;
-                     LConnectionStatus.setText("Disconnected");
-                  }
-               } catch (InterruptedException e) {
-                  e.printStackTrace();
-               } finally {
-                  mutex.release();
-               }
-               try {
-                  System.out.println("Sleeping");
                   Thread.sleep(10000);
                } catch (InterruptedException e) {
                   e.printStackTrace();
+               }
+               try {
+                  mutex.acquire();
+                  client.ping();
+               } catch (InterruptedException e) {
+                  e.printStackTrace();
+               } catch (Client.LostConnectionException e) {
+                  connected = false;
+                  LConnectionStatus.setText("Disconnected");
+               } catch (IOException e) {
+                  e.printStackTrace();
+               } finally {
+                  mutex.release();
                }
             }
          }
