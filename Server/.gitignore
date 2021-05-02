@@ -9,4 +9,4 @@ test_build/
 .settings
 .project
 
-.vscode
+.vscode/
