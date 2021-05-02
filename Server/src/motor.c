@@ -89,12 +89,21 @@ void idle()
    Motor_Stop(MOTOR_L);
 }
 
-void motorInit()
+int motorInit()
 {
-   //consult main.c of code given for library
+   //1.System Initialization
+    if(DEV_ModuleInit())
+    {
+       printf("Failed to initialize motors");
+       return 1;
+    }
+    
+    //2.Motor Initialization
+    Motor_Init();
+    return 0;
 }
 
 void motorQuit()
 {
-   //consult main.c of code given for library
+   DEV_ModuleExit();
 } 

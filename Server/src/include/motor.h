@@ -85,10 +85,11 @@ void rotateLeft(unsigned char speed);
 void idle();
 
 /**
- * @brief Necessary steps required to make the motors run
+ * @brief Initialises the systems required to make the motors run
  * 
+ * @return int 1 if there was an error, 0 otherwise
  */
-void motorInit();
+int motorInit();
 
 /**
  * @brief Necessary steps before exiting
