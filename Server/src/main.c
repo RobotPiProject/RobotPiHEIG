@@ -11,8 +11,8 @@ Taches:
 */
 
 #include <stdio.h>
-#include "include/init.h"
-#include "include/server.h"
+#include "../include/init.h"
+#include "../include/server.h"
 #include <sys/socket.h>
 
 int main() {

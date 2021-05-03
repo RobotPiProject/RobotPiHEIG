@@ -53,3 +53,7 @@ $ git clone git@github.com:tttapa/RPi-Cpp-Toolchain.git
 ```sh
 $ cp x-tools /opt -r
 ```
+
+/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/include/bcm2835.h
+/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/lib/libbcm2835.a
+

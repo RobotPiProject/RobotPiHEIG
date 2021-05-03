@@ -1,19 +1,22 @@
-# Set to the address of the Raspberry Pi
 PI_ADDR = 192.168.0.66
 
-# Toolchain and sysroot location
 TOOLCHAIN = armv8-rpi3-linux-gnueabihf
 TOOLCHAIN_DIR = /opt/x-tools/$(TOOLCHAIN)
-SYSROOT = $(TOOLCHAIN_DIR)/$(TOOLCHAIN)/sysroot/
+SYSROOT = $(TOOLCHAIN_DIR)/$(TOOLCHAIN)/sysroot
+HEADERS = $(TOOLCHAIN_DIR)/$(TOOLCHAIN)/include
+LIBS = $(TOOLCHAIN_DIR)/$(TOOLCHAIN)/lib
 BUILDTOOLS = $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN)
 
 CC = gcc
 LD = ld
-CFLAGS = -g -Wall
-LDFLAGS = -lc -pthread
+AR = ar
+CFLAGS = -g -Wall -I$(HEADERS)
+LDFLAGS = -lc -pthread -lbcm2835 -lm -lMotor -lbcm2835
+ARFLAGS = -crs
 TARGETFOLDER = bin
 APPNAME = RoboPiServer
 TEST_APPNAME = RoboPiServerTest
+LIBNAME = libMotor.a
 
 SUBDIR = src
 INCLUDE_DIR = $(SUBDIR)/include
@@ -22,6 +25,7 @@ OUT_DIR = ./bin
 TEST_OUT_DIR = ./test_bin
 OBJ_DIR = ./build
 TEST_OBJ_DIR = ./test_build
+MOTORLIB_SRCDIR = src/motorLib
 
 SRCS = $(wildcard *.c $(foreach dir, $(SUBDIR), $(dir)/*.c))
 TEST_SRCS = $(wildcard *.c $(foreach dir, $(TEST_SUBDIR), $(dir)/*.c))
@@ -29,11 +33,18 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:c=o))
 TEST_OBJS = $(addprefix $(TEST_OBJ_DIR)/, $(TEST_SRCS:c=o))
 DEPS = $(wildcard *.h $(foreach dir, $(INCLUDE_DIR), $(dir)/*.h))
 
+LIBSRCS = $(wildcard $(MOTORLIB_SRCDIR)/*.c)
+LIBOBJS = $(addprefix $(OBJ_DIR)/, $(LIBSRCS:.c=.o))
+
 .PHONY: clean
+.PHONY: lib
+.PHONY: install_libs
 
-all: $(OUT_DIR)/$(APPNAME) $(TEST_OUT_DIR)/$(TEST_APPNAME)
+all: app
 
-$(OUT_DIR)/$(APPNAME): $(OBJS)
+app: $(OUT_DIR)/$(APPNAME)
+
+$(OUT_DIR)/$(APPNAME): lib $(OBJS)
 	mkdir -p $(@D)
 	$(BUILDTOOLS)-$(CC) $(OBJS) $(LDFLAGS) -o $@
 
@@ -54,13 +65,28 @@ clean:
 	rm -rf $(OBJ_DIR)/*
 	rm -rf $(TEST_OUT_DIR)/*
 	rm -rf $(TEST_OBJ_DIR)/*
+	rm -f $(LIBNAME)
 
 deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 
-test: 
+test: test_server test_robot
+
+test_server:
+	$(TEST_OUT_DIR)/$(TEST_APPNAME)
+
+test_robot:
 
 new_file:
 	@echo "Entrez le nom des fichiers que vous voulez créer"
 	@read fileName; \
 	touch src/$$fileName.c src/include/$$fileName.h test/test_$$fileName.c
+
+lib: install_libs $(LIBNAME)
+
+install_libs:
+	sudo cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
+	sudo cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
+
+$(LIBNAME): $(LIBOBJS)
+	sudo $(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)
