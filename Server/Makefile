@@ -70,8 +70,12 @@ clean:
 deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 
-test:
+test: test_server test_robot
+
+test_server:
 	$(TEST_OUT_DIR)/$(TEST_APPNAME)
+
+test_robot:
 
 new_file:
 	@echo "Entrez le nom des fichiers que vous voulez créer"
