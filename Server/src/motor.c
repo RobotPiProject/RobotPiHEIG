@@ -2,55 +2,108 @@
 
 void setMotor(char motor, signed char velocity)
 {
-
+   if(motor == MOTOR_R || motor == MOTOR_L)
+   {
+      unsigned char speed;
+      DIR direction;
+      if (velocity > 0)
+      {
+         direction = FORWARD;
+         speed = velocity > 100 ? 100 : velocity;
+      }
+      else if (velocity < 0)
+      {
+         direction = BACKWARD;
+         speed = velocity < -100 ? 100 : -velocity;
+      } 
+      else
+      {
+         Motor_Stop(motor);
+         return;
+      }
+      speed = (unsigned char)(speed / 100. * SPEED_RANGE) + MIN_SPEED;
+      Motor_run(motor, direction, speed);
+   }
 }
 
-void runForward(signed char velocity)
+void runForward(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, speed);
+   setMotor(MOTOR_L, speed);
 }
 
-void runBackward(signed char velocity)
+//TODO: correct copy/paste
+void runBackward(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, -speed);
+   setMotor(MOTOR_L, -speed);
 }
 
-void turnRightF(signed char velocity)
+void turnRightF(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, speed * 0.5);
+   setMotor(MOTOR_L, speed);
 }
 
-void turnLeftF(signed char velocity)
+void turnLeftF(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, speed);
+   setMotor(MOTOR_L, speed * 0.5);
 }
 
-void turnRightB(signed char velocity)
+void turnRightB(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, -(speed * 0.5));
+   setMotor(MOTOR_L, -speed);
 }
 
-void turnLeftB(signed char velocity)
+void turnLeftB(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, -speed);
+   setMotor(MOTOR_L, -(speed * 0.5));
 }
 
-void rotateRight(signed char velocity)
+void rotateRight(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, -speed);
+   setMotor(MOTOR_L, speed);
 }
 
-void rotateLeft(signed char velocity)
+void rotateLeft(unsigned char speed)
 {
-
+   speed = speed > 100 ? 100 : speed;
+   setMotor(MOTOR_R, speed);
+   setMotor(MOTOR_L, -speed);
 }
 
-void motorInit()
+void idle()
 {
-   //consult main.c of code given for library
+   Motor_Stop(MOTOR_R);
+   Motor_Stop(MOTOR_L);
+}
+
+int motorInit()
+{
+   //1.System Initialization
+    if(DEV_ModuleInit())
+    {
+       printf("Failed to initialize motors");
+       return 1;
+    }
+    
+    //2.Motor Initialization
+    Motor_Init();
+    return 0;
 }
 
 void motorQuit()
 {
-   //consult main.c of code given for library
+   DEV_ModuleExit();
 } 

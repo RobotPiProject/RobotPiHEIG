@@ -5,78 +5,91 @@
 
 #define MAX_SPEED 70 //Used to prevent overvoltage of motors
 #define MIN_SPEED 0 //Minimum speed at which the robot actually moves
+#define SPEED_RANGE MAX_SPEED - MIN_SPEED
+
 #define MOTOR_L MOTORA
 #define MOTOR_R MOTORB
 
 /**
- * @brief Sets the velocity of the specified motor
+ * @brief Sets the speed of the specified motor
  * 
  * @param motor The motor to command {MOTOR_R, MOTOR_L}
  * @param velocity The velocity to run the motor at [-100, 100]
+ * 
+ * Motors are wired such that velocity > 0 will always make the motor go forward (and inversely) even though they are physically mounted in mirror
+ * Function has no effect if motor value isn't valid
+ * Velocity is clamped if value is < -100 or > 100
  */
 void setMotor(char motor, signed char velocity);
 
 /**
  * @brief Makes the robot run forward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void runForward(signed char velocity);
+void runForward(unsigned char speed);
 
 /**
  * @brief Makes the robot run backward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void runBackward(signed char velocity);
+void runBackward(unsigned char speed);
 
 /**
  * @brief Makes the robot turn right forward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void turnRightF(signed char velocity);
+void turnRightF(unsigned char speed);
 
 /**
  * @brief Makes the robot turn left forward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void turnLeftF(signed char velocity);
+void turnLeftF(unsigned char speed);
 
 /**
  * @brief Makes the robot turn right backward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void turnRightB(signed char velocity);
+void turnRightB(unsigned char speed);
 
 /**
  * @brief Makes the robot turn left backward
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void turnLeftB(signed char velocity);
+void turnLeftB(unsigned char speed);
 
 /**
  * @brief Makes the robot rotate on itself clockwise
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void rotateRight(signed char velocity);
+void rotateRight(unsigned char speed);
 
 /**
  * @brief Makes the robot rotate on itself anti-clockwise
  * 
- * @param velocity The velocity to run the motors at [-100, 100]
+ * @param speed The speed to run the motors at [0, 100]
  */
-void rotateLeft(signed char velocity);
+void rotateLeft(unsigned char speed);
 
 /**
- * @brief Necessary steps required to make the motors run
+ * @brief Stops the robot
  * 
  */
-void motorInit();
+void idle();
+
+/**
+ * @brief Initialises the systems required to make the motors run
+ * 
+ * @return int 1 if there was an error, 0 otherwise
+ */
+int motorInit();
 
 /**
  * @brief Necessary steps before exiting
