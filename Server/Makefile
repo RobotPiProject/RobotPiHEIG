@@ -10,8 +10,8 @@ BUILDTOOLS = $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN)
 CC = gcc
 LD = ld
 AR = ar
-CFLAGS = -g -Wall
-LDFLAGS = -lc -pthread -lbcm2835 -lm
+CFLAGS = -g -Wall -I$(HEADERS)
+LDFLAGS = -lc -pthread -lbcm2835 -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 TARGETFOLDER = bin
 APPNAME = RoboPiServer
@@ -40,7 +40,9 @@ LIBOBJS = $(addprefix $(OBJ_DIR)/, $(LIBSRCS:.c=.o))
 .PHONY: lib
 .PHONY: install_libs
 
-all: $(OUT_DIR)/$(APPNAME) $(TEST_OUT_DIR)/$(TEST_APPNAME)
+all: app
+
+app: $(OUT_DIR)/$(APPNAME)
 
 $(OUT_DIR)/$(APPNAME): lib $(OBJS)
 	mkdir -p $(@D)
@@ -69,6 +71,7 @@ deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 
 test:
+	$(TEST_OUT_DIR)/$(TEST_APPNAME)
 
 new_file:
 	@echo "Entrez le nom des fichiers que vous voulez créer"
@@ -78,8 +81,8 @@ new_file:
 lib: install_libs $(LIBNAME)
 
 install_libs:
-	cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
-	cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
+	sudo cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
+	sudo cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
 
 $(LIBNAME): $(LIBOBJS)
-	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)
+	sudo $(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)

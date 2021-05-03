@@ -1,4 +1,4 @@
-#include "include/motor.h"
+#include "../include/motor.h"
 
 void setMotor(char motor, signed char velocity)
 {
@@ -22,7 +22,7 @@ void setMotor(char motor, signed char velocity)
          return;
       }
       speed = (unsigned char)(speed / 100. * SPEED_RANGE) + MIN_SPEED;
-      Motor_run(motor, direction, speed);
+      Motor_Run(motor, direction, speed);
    }
 }
 
