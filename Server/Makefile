@@ -75,7 +75,8 @@ test: test_server test_robot
 test_server:
 	$(TEST_OUT_DIR)/$(TEST_APPNAME)
 
-test_robot:
+test_robot: $(TEST_SUBDIR)/test_motor.c
+	$(BUILDTOOLS)-$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 new_file:
 	@echo "Entrez le nom des fichiers que vous voulez créer"
