@@ -34,6 +34,29 @@ $ cat ~/.ssh/id_rsa.pub >> rootfs_mount_dir/home/pi/.ssh/authorized_keys
 
 Replace `sdcard_rootfs_mount_dir` with the path to the directory where the `rootfs` partition of the SD card was mounted by your operating system.
 
+### bcm2835 setup
+
+To enable non-root access to `/dev/mem` on the Raspberry Pi, the server executable must have the `cap_sys_rawio` capability :
+
+```pi@raspberry$ sudo setcap cap_sys_rawio+ep RoboPiServer```
+
+This step is done in the `deploy` target of the Makefile.
+
+The following must be done only once for each time Raspbian is reinstalled :
+
+1. Add the current user to `kmem` group
+
+```
+pi@raspberry$ sudo adduser $USER kmem
+```
+
+2. Allow write access to /dev/mem by members of kmem group
+
+```
+pi@raspberry$ echo 'SUBSYSTEM=="mem", KERNEL=="mem", GROUP="kmem", MODE="0660"' | sudo tee /etc/udev/rules.d/98-mem.rules
+pi@raspberry$ sudo reboot
+```
+
 ##  Toolchain setup
 
 We use the toolchain provided by the [RPi-Cpp-Toolchain](https://github.com/tttapa/RPi-Cpp-Toolchain) project. It uses docker to retrieve and generate the appropriate toolchain and sysroot for the Raspberry Pi Robot.
@@ -54,6 +77,15 @@ $ git clone git@github.com:tttapa/RPi-Cpp-Toolchain.git
 $ cp x-tools /opt -r
 ```
 
-/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/include/bcm2835.h
-/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/lib/libbcm2835.a
+### Library install locations
 
+For cross-compiling purposes, header files shall be put in the following location in the toolchain:
+```
+/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/include/bcm2835.h
+```
+
+Compiled library files shall be put in the following location in the toolchain:
+
+```
+/opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/lib/libbcm2835.a
+```
