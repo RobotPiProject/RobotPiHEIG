@@ -11,7 +11,7 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS)
-LDFLAGS = -lc -pthread -lbcm2835 -lm -lMotor -lbcm2835
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 TARGETFOLDER = bin
 APPNAME = RoboPiServer
@@ -65,15 +65,16 @@ clean:
 	rm -rf $(OBJ_DIR)/*
 	rm -rf $(TEST_OUT_DIR)/*
 	rm -rf $(TEST_OBJ_DIR)/*
+	rm -rf $(TEST_OUT_DIR)/*
 	rm -f $(LIBNAME)
 
 deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
 
 test: test_server test_robot
 
-test_server:
-	$(TEST_OUT_DIR)/$(TEST_APPNAME)
+test_server: $(TEST_OUT_DIR)/$(TEST_APPNAME)
 
 test_robot:
 
@@ -85,8 +86,8 @@ new_file:
 lib: install_libs $(LIBNAME)
 
 install_libs:
-	sudo cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
-	sudo cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
+	cp $(MOTORLIB_SRCDIR)/*.h $(HEADERS)/
+	cp $(MOTORLIB_SRCDIR)/libbcm2835.a $(LIBS)/
 
 $(LIBNAME): $(LIBOBJS)
-	sudo $(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)
+	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIBS)/$@ $(LIBOBJS)
