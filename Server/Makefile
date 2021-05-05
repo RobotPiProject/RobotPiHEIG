@@ -19,7 +19,7 @@ TEST_SERVER_APPNAME = serverTest
 TEST_ROBOT_APPNAME = robotTest
 LIBNAME = libMotor.a
 
-SUBDIR = src
+SRC_DIR = src
 INCLUDE_DIR = include
 TEST_SERVER_SUBDIR = test_server
 TEST_ROBOT_SUBDIR = test_robot
@@ -27,7 +27,7 @@ LIB_DIR = lib
 OUT_DIR = bin
 MOTORLIB_SRCDIR = src/motorLib
 
-SRCS = $(wildcard $(SUBDIR)/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c)
 TEST_SERVER_SRCS = $(wildcard $(TEST_SERVER_SUBDIR)/*.c)
 TEST_ROBOT_SRCS = $(wildcard $(TEST_ROBOT_SUBDIR)/*.c)
 OBJS = $(SRCS:.c=.o)
@@ -50,18 +50,20 @@ app: $(OUT_DIR)/$(APPNAME)
 
 $(OUT_DIR)/$(APPNAME): $(OBJS)
 	mkdir -p $(OUT_DIR)
-	$(BUILDTOOLS)-$(CC) $(OBJS) $(LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
 
 %.o: %.c $(DEPS)
 	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm *.o
+	rm $(SRC_DIR)/*.o
 	rm -f $(LIBNAME)
+	rm -f $(OUT_DIR)/*
 
 deploy: $(OUT_DIR)/$(APPNAME)
-	scp $^ root@$(PI_ADDR):$(PI_INSTALL_DIR)/
+	scp $^ pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(APPNAME) $(PI_INSTALL_DIR)/$(APPNAME)'
 
 test: test_server test_robot
 
@@ -70,15 +72,10 @@ test_server: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 test_robot: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 
 $(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS)
-	$(BUILDTOOLS)-$(CC) $(TEST_SERVER_OBJS) $(LDFLAGS) -o $@
-
-$(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) src/motor.o
 	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
 
-new_file:
-	@echo "Entrez le nom des fichiers que vous voulez créer"
-	@read fileName; \
-	touch src/$$fileName.c src/include/$$fileName.h test/test_$$fileName.c
+$(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
+	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
 
 #2)
 lib: $(LIBNAME)
@@ -93,8 +90,14 @@ install_motorLib: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
 $(LIBNAME): $(LIBOBJS)
-	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $(LIBOBJS)
+	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
 	setcap cap_sys_rawio+ep $(PI_INSTALL_DIR)/$(APPNAME)
+
+new_file:
+	@echo "Entrez le nom des fichiers que vous voulez créer"
+	@read fileName; \
+	touch src/$$fileName.c src/include/$$fileName.h test/test_$$fileName.c
+

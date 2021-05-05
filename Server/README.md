@@ -89,3 +89,5 @@ Compiled library files shall be put in the following location in the toolchain:
 ```
 /opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/lib
 ```
+
+You can do both these by calling `make install_bcm2835` as root.
