@@ -10,3 +10,5 @@ test_build/
 .project
 
 .vscode/
+
+*.o

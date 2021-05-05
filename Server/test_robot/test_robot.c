@@ -9,7 +9,7 @@
  * 
  */
 
-#include "motor.h"
+#include "../include/motor.h"
 #include <unistd.h>
 
 void test_motor(void);
