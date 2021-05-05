@@ -60,7 +60,7 @@ clean:
 	rm -f $(LIBNAME)
 
 deploy: $(OUT_DIR)/$(APPNAME)
-	scp $^ pi@$(PI_ADDR):/home/pi
+	scp $^ root@$(PI_ADDR):$(PI_INSTALL_DIR)/
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
 
 test: test_server test_robot
