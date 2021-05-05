@@ -56,7 +56,7 @@ $(OUT_DIR)/$(APPNAME): $(OBJS)
 	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm $(SRC_DIR)/*.o
+	rm -f $(SRC_DIR)/*.o
 	rm -f $(LIBNAME)
 	rm -f $(OUT_DIR)/*
 
