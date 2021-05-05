@@ -7,6 +7,7 @@
 #define MAX_SPEED 70 //Used to prevent overvoltage of motors
 #define MIN_SPEED 10 //Minimum speed at which the robot moves significantly
 #define SPEED_RANGE MAX_SPEED - MIN_SPEED
+#define DEFAULT_SPEED 50
 
 #define MOTOR_L MOTORA
 #define MOTOR_R MOTORB
