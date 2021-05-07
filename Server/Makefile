@@ -21,15 +21,15 @@ LIBNAME = libMotor.a
 
 SRC_DIR = src
 INCLUDE_DIR = include
-TEST_SERVER_SUBDIR = test_server
-TEST_ROBOT_SUBDIR = test_robot
+TEST_SERVER_SRC_DIR = test_server
+TEST_ROBOT_SRC_DIR = test_robot
 LIB_DIR = lib
 OUT_DIR = bin
 MOTORLIB_SRCDIR = src/motorLib
 
 SRCS = $(wildcard $(SRC_DIR)/*.c)
-TEST_SERVER_SRCS = $(wildcard $(TEST_SERVER_SUBDIR)/*.c)
-TEST_ROBOT_SRCS = $(wildcard $(TEST_ROBOT_SUBDIR)/*.c)
+TEST_SERVER_SRCS = $(wildcard $(TEST_SERVER_SRC_DIR)/*.c)
+TEST_ROBOT_SRCS = $(wildcard $(TEST_ROBOT_SRC_DIR)/*.c)
 OBJS = $(SRCS:.c=.o)
 TEST_SERVER_OBJS = $(TEST_SERVER_SRCS:.c=.o)
 TEST_ROBOT_OBJS = $(TEST_ROBOT_SRCS:.c=.o)
@@ -59,6 +59,8 @@ clean:
 	rm -f $(SRC_DIR)/*.o
 	rm -f $(LIBNAME)
 	rm -f $(OUT_DIR)/*
+	rm -f $(TEST_SERVER_SRC_DIR)/*.o
+	rm -f $(TEST_ROBOT_SRC_DIR)/*.o
 
 deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
