@@ -100,7 +100,7 @@ deploy: $(OUT_DIR)/$(APPNAME)
 
 clean:
 	rm -f $(SRC_DIR)/*.o
-	rm -f $(LIBNAME)
+	rm -f $(LIB_DIR)/$(LIBNAME)
 	rm -f $(OUT_DIR)/*
 	rm -f $(TEST_SERVER_SRC_DIR)/*.o
 	rm -f $(TEST_ROBOT_SRC_DIR)/*.o
