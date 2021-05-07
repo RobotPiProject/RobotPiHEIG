@@ -39,9 +39,11 @@ LIBSRCS = $(wildcard $(MOTORLIB_SRCDIR)/*.c)
 LIBOBJS = $(LIBSRCS:.c=.o)
 
 .PHONY: clean
-.PHONY: lib
-.PHONY: install_libs
 .PHONY: install
+.PHONY: install_libs
+.PHONY: install_libMotor
+.PHONY: install_bcm2835
+.PHONY: deploy
 
 #4)
 all: app
@@ -54,18 +56,6 @@ $(OUT_DIR)/$(APPNAME): $(OBJS)
 
 %.o: %.c $(DEPS)
 	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(CFLAGS)
-
-clean:
-	rm -f $(SRC_DIR)/*.o
-	rm -f $(LIBNAME)
-	rm -f $(OUT_DIR)/*
-	rm -f $(TEST_SERVER_SRC_DIR)/*.o
-	rm -f $(TEST_ROBOT_SRC_DIR)/*.o
-
-deploy: $(OUT_DIR)/$(APPNAME)
-	scp $^ pi@$(PI_ADDR):/home/pi
-	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
-	ssh pi@$(PI_ADDR) 'sudo mv $(APPNAME) $(PI_INSTALL_DIR)/$(APPNAME)'
 
 test: test_server test_robot
 
@@ -82,6 +72,11 @@ $(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
 #2)
 lib: $(LIBNAME)
 
+$(LIBNAME): $(LIBOBJS)
+	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
+
+install_libs: install_bcm2835 install_libMotor
+
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
 	cp $(MOTORLIB_SRCDIR)/bcm2835.h $(HEADERS)/
@@ -90,16 +85,20 @@ install_bcm2835:
 #3) [root] Execute each time the library is recompiled
 install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
-
-$(LIBNAME): $(LIBOBJS)
-	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
+	cp $(MOTORLIB_SRCDIR)/MotorDriver.h $(HEADERS)/
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
 	setcap cap_sys_rawio+ep $(PI_INSTALL_DIR)/$(APPNAME)
 
-new_file:
-	@echo "Entrez le nom des fichiers que vous voulez créer"
-	@read fileName; \
-	touch src/$$fileName.c src/include/$$fileName.h test/test_$$fileName.c
+deploy: $(OUT_DIR)/$(APPNAME)
+	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(APPNAME) $(PI_INSTALL_DIR)/$(APPNAME)'
 
+clean:
+	rm -f $(SRC_DIR)/*.o
+	rm -f $(LIBNAME)
+	rm -f $(OUT_DIR)/*
+	rm -f $(TEST_SERVER_SRC_DIR)/*.o
+	rm -f $(TEST_ROBOT_SRC_DIR)/*.o
