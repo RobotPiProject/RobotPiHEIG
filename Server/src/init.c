@@ -1,4 +1,4 @@
-#include "../include/init.h"
+#include <init.h>
 
 int init() {
     return 0;

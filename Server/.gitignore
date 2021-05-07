@@ -14,4 +14,4 @@ bin/
 *.o
 
 docker/RPi-Cpp-Toolchain
-docker/x-tool
+docker/x-tools
