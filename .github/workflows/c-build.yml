@@ -35,6 +35,6 @@ jobs:
           ./toolchain.sh rpi3-armv8-dev --pull --export
           cp x-tools /opt -r
           cd ../../Server
-          make install_bcm2835
-          make install_libMotor
+          sudo make install_bcm2835
+          sudo make install_libMotor
           make
