@@ -88,7 +88,7 @@ install_bcm2835:
 	cp $(LIB_DIR)/libbcm2835.a $(SYSLIBS)/
 
 #3) [root] Execute each time the library is recompiled
-install_motorLib: lib
+install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
 $(LIBNAME): $(LIBOBJS)
