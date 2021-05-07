@@ -80,12 +80,14 @@ install_libs: install_bcm2835 install_libMotor
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
 	cp $(MOTORLIB_SRCDIR)/bcm2835.h $(HEADERS)/
+	cp $(MOTORLIB_SRCDIR)/DEV_Config.h $(HEADERS)/
+	cp $(MOTORLIB_SRCDIR)/PCA9685.h $(HEADERS)/
+	cp $(MOTORLIB_SRCDIR)/MotorDriver.h $(HEADERS)/
 	cp $(LIB_DIR)/libbcm2835.a $(SYSLIBS)/
 
 #3) [root] Execute each time the library is recompiled
 install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
-	cp $(MOTORLIB_SRCDIR)/MotorDriver.h $(HEADERS)/
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)

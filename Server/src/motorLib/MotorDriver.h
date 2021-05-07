@@ -16,8 +16,8 @@
 #ifndef __TB6612FNG_
 #define __TB6612FNG_
 
-#include "DEV_Config.h"
-#include "PCA9685.h"
+#include <DEV_Config.h>
+#include <PCA9685.h>
 
 //GPIO config
 #define PWMA        PCA_CHANNEL_0
