@@ -1,5 +1,5 @@
-#include "../include/server.h"
-#include "../include/protocol.h"
+#include <server.h>
+#include <protocol.h>
 
 const char *WELCOME_MSG = "Welcome to RoboPi!\n";
 int client_connected = 0;
