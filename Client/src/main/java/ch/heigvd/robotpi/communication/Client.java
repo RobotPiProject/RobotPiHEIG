@@ -55,6 +55,7 @@ public class Client {
     public void ping() throws IOException, LostConnectionException {
         out.println("PING");
         if (!in.readLine().equals("PING")) {
+            isConnected = false;
             throw new LostConnectionException();
         }
     }
@@ -95,7 +96,7 @@ public class Client {
 
     public void stop() throws IOException, RobotException {
         out.println("STOP");
-        if (!in.readLine().equals("STOP")) {
+        if (!in.readLine().equals("STOP_OK")) {
             throw new RobotException();
         }
         isMoving = false;
