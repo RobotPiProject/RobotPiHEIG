@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1090.0" xmlns="https://javafx.com/javafx" xmlns:fx="https://javafx.com/fxml" fx:controller="ch.heigvd.robotpi.userinterface.UIController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="682.0" prefWidth="956.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ch.heigvd.robotpi.userinterface.UIController">
    <top>
       <MenuBar minHeight="-Infinity" minWidth="-Infinity" BorderPane.alignment="CENTER">
         <menus>
@@ -41,9 +41,9 @@
       <SplitPane dividerPositions="0.6768603465851172" minHeight="-Infinity" minWidth="-Infinity" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <items>
             <Pane minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="200.0" />
-            <SplitPane dividerPositions="0.09961190168175937, 0.6636481241914618" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="773.0" prefWidth="368.0">
+            <SplitPane dividerPositions="0.09961190168175937, 0.6636481241914618" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="600.0" prefWidth="338.0">
                <items>
-                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="74.0" prefWidth="338.0">
+                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="338.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="251.0" minWidth="10.0" prefWidth="201.79991455078124" />
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="164.0" minWidth="10.0" prefWidth="146.60008544921874" />
@@ -89,7 +89,7 @@
                         <Button fx:id="BBackwardsRight" mnemonicParsing="false" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                      </children>
                   </GridPane>
-                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="222.0" prefWidth="338.0">
+                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="338.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="164.0" minWidth="10.0" prefWidth="114.0" />
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="235.0" minWidth="10.0" prefWidth="235.0" />
@@ -100,7 +100,7 @@
                     </rowConstraints>
                      <children>
                         <Label text="Settings" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                        <Label text="Connection address" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                        <Label text="Connection address" textAlignment="CENTER" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                         <TextField fx:id="TFConnectionAddress" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <GridPane.margin>
                               <Insets left="10.0" right="10.0" />

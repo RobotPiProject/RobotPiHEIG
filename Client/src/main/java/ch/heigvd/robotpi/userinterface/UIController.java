@@ -35,9 +35,11 @@ import java.util.concurrent.Semaphore;
  * The controller of the main window of the client's app
  */
 public class UIController {
+   //Image Width
+   private final int IMAGE_SIZE = 80;
+   private final Semaphore mutex = new Semaphore(1);
    //Settings
    private Properties settings;
-   private final Semaphore mutex = new Semaphore(1);
    private Scene scene;
    private String currentIpAddress;
    private Thread workerThread;
@@ -441,8 +443,8 @@ public class UIController {
     */
    private void addImageToButton(Button b, String imageSrc) {
       ImageView i = new ImageView(new Image(getClass().getClassLoader().getResourceAsStream(imageSrc)));
-      i.setFitWidth(90);
-      i.setFitHeight(90);
+      i.setFitWidth(IMAGE_SIZE);
+      i.setFitHeight(IMAGE_SIZE);
       b.setMaxHeight(i.getFitHeight());
       b.setMaxWidth(i.getFitWidth());
       b.setGraphic(i);
