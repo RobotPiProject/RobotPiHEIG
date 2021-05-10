@@ -12,7 +12,7 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
-LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
@@ -75,7 +75,7 @@ lib: $(LIBNAME)
 $(LIBNAME): $(LIBOBJS)
 	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
 
-install_libs: install_bcm2835 install_libMotor
+install_libs: install_bcm2835 install_libMotor install_libcmocka
 
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
@@ -89,6 +89,12 @@ install_bcm2835:
 install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
+install_libcmocka:
+	cp $(LIB_DIR)/libcmocka.so.0.7.0 $(SYSLIBS)
+	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
+	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
+	cp $(INCLUDE_DIR)/cmocka/*.h $(HEADERS)/
+
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
 	setcap cap_sys_rawio+ep $(PI_INSTALL_DIR)/$(APPNAME)
@@ -97,6 +103,18 @@ deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(APPNAME) $(PI_INSTALL_DIR)/$(APPNAME)'
+
+deploy_tests: deploy_server_tests deploy_motor_tests
+
+deploy_server_tests: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
+	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_SERVER_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_SERVER_APPNAME) $(PI_INSTALL_DIR)/$(TEST_SERVER_APPNAME)'
+
+deploy_motor_tests: $(OUT_DIR)/$(TEST_MOTOR_APPNAME))
+	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_MOTOR_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_MOTOR_APPNAME) $(PI_INSTALL_DIR)/$(TEST_MOTOR_APPNAME)'
 
 clean:
 	rm -f $(SRC_DIR)/*.o
