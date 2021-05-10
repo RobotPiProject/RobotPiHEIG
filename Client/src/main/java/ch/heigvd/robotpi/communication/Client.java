@@ -9,13 +9,17 @@ import java.net.Socket;
 
 public class Client {
     private Socket clientSocket;
+    private String ipAddress;
     private PrintWriter out;
     private BufferedReader in;
     private boolean isConnected;
     public final int PORT = 2025;
+    public final int PORTPICTURE = 2026;
+
 
     public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
         clientSocket = new Socket(ip, PORT);
+        ipAddress = ip;
         out = new PrintWriter(clientSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         isConnected = true;
@@ -28,6 +32,10 @@ public class Client {
             clientSocket.close();
             throw new IncorrectDeviceException();
         }
+    }
+
+    public void takePicture(String imagename) {
+        
     }
 
     public boolean isConnected() {
