@@ -44,6 +44,13 @@ This step is done in the `deploy` target of the Makefile.
 
 The following must be done only once for each time Raspbian is reinstalled :
 
+0. Enable `libcap` support
+
+```
+sudo apt-get update
+sudo apt-get install libcap2 libcap-dev
+```
+
 1. Add the current user to `kmem` group
 
 ```
