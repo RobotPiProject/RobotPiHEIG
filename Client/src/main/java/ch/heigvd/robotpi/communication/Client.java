@@ -1,11 +1,10 @@
 package ch.heigvd.robotpi.communication;
 
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
     private Socket clientSocket;
@@ -13,6 +12,7 @@ public class Client {
     private PrintWriter out;
     private BufferedReader in;
     private boolean isConnected;
+    private boolean isMoving = false;
     public final int PORT = 2025;
     public final int PORTPICTURE = 2026;
 
@@ -34,8 +34,43 @@ public class Client {
         }
     }
 
-    public void takePicture(String imagename) {
-        
+    public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
+
+
+
+        Socket socketPicture = new Socket(ipAddress, PORTPICTURE);
+
+        PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+        BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+
+        outPic.println("PICTURE");
+        String message = inPic.readLine();
+
+        if (!message.equals("PICTURE_OK")) {
+            throw new RobotException();
+        }
+
+        InputStream is = socketPicture.getInputStream();
+        Scanner reader = new Scanner(is);
+        System.out.print(reader.nextLine());
+        BufferedImage bi;
+
+        while (true) {
+            try {
+                bi = ImageIO.read(is);
+                break;
+            } catch (IOException e) {
+                outPic.println("RESEND_PICTURE");
+            }
+        }
+
+        socketPicture.close();
+
+        ImageIO.write(bi, "jpg", new File(imagename));
+
     }
 
     public boolean isConnected() {
@@ -166,6 +201,6 @@ public class Client {
         return isMoving;
     }
 
-    private boolean isMoving = false;
+
 
 }
