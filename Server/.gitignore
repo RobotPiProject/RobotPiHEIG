@@ -1,7 +1,7 @@
 build/
-bin/
 test_bin/
 test_build/
+bin/
 
 .idea/
 
@@ -10,3 +10,8 @@ test_build/
 .project
 
 .vscode/
+
+*.o
+
+docker/RPi-Cpp-Toolchain
+docker/x-tools

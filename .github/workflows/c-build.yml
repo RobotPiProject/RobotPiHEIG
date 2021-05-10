@@ -35,4 +35,5 @@ jobs:
           ./toolchain.sh rpi3-armv8-dev --pull --export
           cp x-tools /opt -r
           cd ../../Server
+          sudo make install_libs
           make
