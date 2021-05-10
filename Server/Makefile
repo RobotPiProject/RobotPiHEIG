@@ -93,7 +93,7 @@ install_libcmocka:
 	cp $(LIB_DIR)/libcmocka.so.0.7.0 $(SYSLIBS)
 	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
 	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
-	cp $(INCLUDE_DIR)/cmocka/*.h $(HEADERS)/
+	cp $(SRC_DIR)/cmocka/*.h $(HEADERS)/
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
