@@ -12,7 +12,7 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
-LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
 TEST_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
 ARFLAGS = -crs
 APPNAME = RoboPiServer
@@ -76,7 +76,7 @@ lib: $(LIBNAME)
 $(LIBNAME): $(LIBOBJS)
 	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
 
-install_libs: install_bcm2835 install_libMotor install_libcmocka
+install_libs: install_bcm2835 install_libMotor install_libcmocka install_libsocket
 
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
@@ -95,6 +95,10 @@ install_libcmocka:
 	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
 	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
 	cp $(SRC_DIR)/cmocka/*.h $(HEADERS)/
+
+install_libsocket:
+	cp $(LIB_DIR)/libsocket.a $(SYSLIBS)
+	cp $(SRC_DIR)/libsocket/*.h $(HEADERS)/
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
