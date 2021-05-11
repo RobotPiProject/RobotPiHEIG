@@ -1,7 +1,6 @@
 #include <server.h>
 #include <protocol.h>
 
-const char *WELCOME_MSG = "Welcome to RoboPi!\n";
 int client_connected = 0;
 int server_sockfd = 0, client_sockfd = 0;
 
@@ -24,11 +23,11 @@ void *session_task(void *ptr) {
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-    int bytes_read, bytes_sent, res_len;
+    unsigned int bytes_read, bytes_sent, res_len;
     while (1) {
         int cmd_end = 0;
-        int start = 0;
-        int total_bytes = 0;
+        unsigned int start = 0;
+        unsigned int total_bytes = 0;
         while (!cmd_end) {
             bytes_read = recv(client_sockfd, buffer, BUFFER_SIZE, 0);
             total_bytes += bytes_read;
@@ -54,16 +53,13 @@ void *session_task(void *ptr) {
             }
 
             int overflow = 0;
-            if (start > CMD_LEN-1) {
-                fprintf(stderr, "cmd array overflow\n");
-                overflow = 1;
-            }
             if (total_bytes > CMD_LEN) {
                 fprintf(stderr, "Command too long\n");
                 overflow = 1;
             }
+            /* Do not write past the end of the cmd array */
             if (!overflow) {
-                memcpy(cmd + start * sizeof(char), buffer, bytes_read);
+                memcpy(cmd + start * sizeof(char), buffer, CMD_LEN-total_bytes);
             }
             start += bytes_read;
             explicit_bzero(buffer, BUFFER_SIZE);
@@ -116,7 +112,10 @@ void *session_task(void *ptr) {
 }
 
 int server() {
-    signal(SIGINT, close_socks_on_sigint);
+    struct sigaction sa;
+    sa.sa_handler = close_socks_on_sigint;
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGINT, &sa, NULL);
     struct sockaddr_in server_addr, cli_addr;
     pthread_t session_t;
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);

@@ -12,7 +12,8 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
-LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
+TEST_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
@@ -64,10 +65,10 @@ test_server: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 test_robot: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 
 $(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS)
-	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_LDFLAGS) -o $@
 
 $(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
-	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_LDFLAGS) -o $@
 
 #2)
 lib: $(LIBNAME)
