@@ -17,7 +17,7 @@ class ClientGoodServerTest {
 
    @BeforeAll
    static void beforeAll() {
-      Thread srvThread = new Thread(new Server(2025, "good"));
+      Thread srvThread = new Thread(new Server(2025, "good", true));
       srvThread.start();
       try {
          // To be sure that the server is running (tests on github)

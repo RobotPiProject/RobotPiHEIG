@@ -61,6 +61,7 @@ public class Client {
         while (true) {
             try {
                 bi = ImageIO.read(is);
+                outPic.println("RECEIVED_OK");
                 break;
             } catch (IOException e) {
                 outPic.println("RESEND_PICTURE");
