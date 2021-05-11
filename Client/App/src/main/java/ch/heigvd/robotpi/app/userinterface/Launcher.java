@@ -3,7 +3,7 @@
  * @Authors : David González León
  * @Date 17 mars 2021
  */
-package ch.heigvd.robotpi.userinterface;
+package ch.heigvd.robotpi.app.userinterface;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

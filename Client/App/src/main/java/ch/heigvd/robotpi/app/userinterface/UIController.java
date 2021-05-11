@@ -3,10 +3,10 @@
  * @Authors : David González León
  * @Date 24 mars 2021
  */
-package ch.heigvd.robotpi.userinterface;
+package ch.heigvd.robotpi.app.userinterface;
 
-import ch.heigvd.robotpi.communication.Client;
-import ch.heigvd.robotpi.userinterface.settings.SettingsParams;
+import ch.heigvd.robotpi.app.communication.Client;
+import ch.heigvd.robotpi.app.userinterface.settings.SettingsParams;
 import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

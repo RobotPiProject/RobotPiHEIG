@@ -3,7 +3,7 @@
  * @Authors : David González León
  * @Date 2 avr. 2021
  */
-package ch.heigvd.robotpi.userinterface;
+package ch.heigvd.robotpi.app.userinterface;
 
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Region;
