@@ -3,7 +3,7 @@
  * @Authors : David González León
  * @Date 17 avr. 2021
  */
-package ch.heigvd.robotpi.userinterface.settings;
+package ch.heigvd.robotpi.app.userinterface.settings;
 
 import lombok.Getter;
 

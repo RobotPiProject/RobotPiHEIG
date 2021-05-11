@@ -1,4 +1,4 @@
-package ch.heigvd.robotpi.communication;
+package ch.heigvd.robotpi.app.communication;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
