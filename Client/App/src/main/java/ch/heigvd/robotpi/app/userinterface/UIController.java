@@ -554,7 +554,7 @@ public class UIController {
       private final String photoPath;
 
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
-
+      //TODO handle exceptions
       @Override
       public void run() {
          try {
@@ -565,6 +565,12 @@ public class UIController {
          } catch (InterruptedException e) {
             e.printStackTrace();
          } catch (FileNotFoundException e) {
+            e.printStackTrace();
+         } catch (Client.CantConnectException e) {
+            e.printStackTrace();
+         } catch (IOException e) {
+            e.printStackTrace();
+         } catch (Client.RobotException e) {
             e.printStackTrace();
          } finally {
             mutexPicture.release();
