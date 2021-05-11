@@ -25,9 +25,11 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 import java.awt.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 
@@ -38,6 +40,7 @@ public class UIController {
    //Image Width
    private final int IMAGE_SIZE = 80;
    private final Semaphore mutex = new Semaphore(1);
+   private final Semaphore mutexPicture = new Semaphore(1);
    //Settings
    private Properties settings;
    private Scene scene;
@@ -68,6 +71,8 @@ public class UIController {
 
    @FXML private Label LConnectionStatus;
    @FXML private TextField TFConnectionAddress;
+
+   @FXML private ImageView imageView;
 
    /**
     * Sets the scene linked to this controller and sets up all of it's components
@@ -128,7 +133,7 @@ public class UIController {
       AnimationTimer timer = new AnimationTimer() {
          @Override
          public void handle(long l) {
-            if (worker.connected) {
+            if (worker.isConnected()) {
                try {
                   mutex.acquire();
                   if (newInstruction) {
@@ -271,6 +276,31 @@ public class UIController {
                                "The adress you provided is not a valid ip adress. Please try again.");
       }
 
+   }
+
+   @FXML
+   private void openDiscoverWindow(ActionEvent event) {
+
+   }
+
+   @FXML
+   private void cameraButtonPressed(ActionEvent event) {
+      if (worker.isConnected()) {
+         try {
+            File figuresDir = new File(new File(".").getCanonicalPath() + "/figures");
+            if (!figuresDir.exists()) {
+               figuresDir.mkdir();
+            }
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
+            LocalDateTime now = LocalDateTime.now();
+            PictureWorker pictureWorker =
+                    new PictureWorker(figuresDir.getPath() + "/" + currentIpAddress + "_" + dtf.format(now));
+            Thread pictureThread = new Thread(pictureWorker);
+            pictureThread.start();
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+      }
    }
 
    private void setupButtons() {
@@ -450,7 +480,6 @@ public class UIController {
       b.setGraphic(i);
    }
 
-
    /**
     * The worker used to keep the connected RadioButton up to date
     */
@@ -520,4 +549,28 @@ public class UIController {
          System.out.println("Exiting");
       }
    }
+
+   class PictureWorker implements Runnable {
+      private final String photoPath;
+
+      PictureWorker(String photoPath) {this.photoPath = photoPath;}
+
+      @Override
+      public void run() {
+         try {
+            mutexPicture.acquire();
+            client.takePicture(photoPath);
+            Image image = new Image(new BufferedInputStream(new FileInputStream(photoPath)));
+            imageView.setImage(image);
+         } catch (InterruptedException e) {
+            e.printStackTrace();
+         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+         } finally {
+            mutexPicture.release();
+         }
+      }
+   }
+
+
 }
