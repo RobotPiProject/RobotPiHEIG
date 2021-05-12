@@ -23,12 +23,13 @@ public class Client {
         out = new PrintWriter(clientSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         isConnected = true;
-        out.println("CONN");
+        out.print("CONN\n");
+        out.flush();
         String message = in.readLine();
-        if (message.equals("CONN_ERR")) {
+        if (message.equals("CONN_ERR\n")) {
             clientSocket.close();
             throw new CantConnectException();
-        } else if (!message.equals("CONN_OK")) {
+        } else if (!message.equals("CONN_OK\n")) {
             clientSocket.close();
             throw new IncorrectDeviceException();
         }
@@ -46,10 +47,11 @@ public class Client {
         PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
         BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
-        outPic.println("PICTURE");
+        outPic.print("PICTURE\n");
+        outPic.flush();
         String message = inPic.readLine();
 
-        if (!message.equals("PICTURE_OK")) {
+        if (!message.equals("PICTURE_OK\n")) {
             throw new RobotException();
         }
 
@@ -61,10 +63,12 @@ public class Client {
         while (true) {
             try {
                 bi = ImageIO.read(is);
-                outPic.println("RECEIVED_OK");
+                outPic.print("RECEIVED_OK\n");
+                outPic.flush();
                 break;
             } catch (IOException e) {
-                outPic.println("RESEND_PICTURE");
+                outPic.print("RESEND_PICTURE\n");
+                outPic.flush();
             }
         }
 
@@ -82,13 +86,14 @@ public class Client {
         int count = 1;
         String message;
         do {
-            out.println("DISCONN");
+            out.print("DISCONN\n");
+            out.flush();
             message = in.readLine();
-        } while (!message.equals("DISCONN_OK") && count++ != 5);
+        } while (!message.equals("DISCONN_OK\n") && count++ != 5);
         in.close();
         out.close();
         clientSocket.close();
-        if (message.equals("DISCONN_OK")) {
+        if (message.equals("DISCONN_OK\n")) {
             isConnected = false;
         }
 
@@ -97,8 +102,9 @@ public class Client {
     //TODO catch les ioException et throw les bonnes exc
 
     public void ping() throws IOException, LostConnectionException {
-        out.println("PING");
-        if (!in.readLine().equals("PING")) {
+        out.print("PING\n");
+        out.flush();
+        if (!in.readLine().equals("PING\n")) {
             isConnected = false;
             throw new LostConnectionException();
         }
@@ -107,40 +113,45 @@ public class Client {
     //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
     public void goForward() throws RobotException, IOException {
-        out.println("FWD");
-        if (!in.readLine().equals("FWD_OK")) {
+        out.print("FWD\n");
+        out.flush();
+        if (!in.readLine().equals("FWD_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goBackward() throws IOException, RobotException {
-        out.println("BKWD");
-        if (!in.readLine().equals("BKWD_OK")) {
+        out.print("BKWD\n");
+        out.flush();
+        if (!in.readLine().equals("BKWD_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goLeft() throws IOException, RobotException {
-        out.println("ROTATE_LEFT");
-        if (!in.readLine().equals("ROTATE_LEFT_OK")) {
+        out.print("ROTATE_LEFT\n");
+        out.flush();
+        if (!in.readLine().equals("ROTATE_LEFT_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goRight() throws IOException, RobotException {
-        out.println("ROTATE_RIGHT");
-        if (!in.readLine().equals("ROTATE_RIGHT_OK")) {
+        out.print("ROTATE_RIGHT\n");
+        out.flush();
+        if (!in.readLine().equals("ROTATE_RIGHT_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void stop() throws IOException, RobotException {
-        out.println("STOP");
-        if (!in.readLine().equals("STOP_OK")) {
+        out.print("STOP\n");
+        out.flush();
+        if (!in.readLine().equals("STOP_OK\n")) {
             throw new RobotException();
         }
         isMoving = false;
@@ -148,35 +159,43 @@ public class Client {
 
     //TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
     public void goFrontLeft() throws IOException, RobotException {
-        out.println("FRONT_L");
-        if (!in.readLine().equals("FRONT_L_OK")) {
+        out.print("FRONT_L\n");
+        out.flush();
+        if (!in.readLine().equals("FRONT_L_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goFrontRight() throws RobotException, IOException {
-        out.println("FRONT_R");
-        if (!in.readLine().equals("FRONT_R_OK")) {
+        out.print("FRONT_R\n");
+        out.flush();
+        if (!in.readLine().equals("FRONT_R_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goBackwardsRight() throws IOException, RobotException {
-        out.println("BCK_R");
-        if (!in.readLine().equals("BCK_R_OK")) {
+        out.print("BCK_R\n");
+        out.flush();
+        if (!in.readLine().equals("BCK_R_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
     }
 
     public void goBackwardsLeft() throws IOException, RobotException {
-        out.println("BCK_L");
-        if (!in.readLine().equals("BCK_L_OK")) {
+        out.print("BCK_L\n");
+        out.flush();
+        if (!in.readLine().equals("BCK_L_OK\n")) {
             throw new RobotException();
         }
         isMoving = true;
+    }
+
+    public boolean isMoving() {
+        return isMoving;
     }
 
     public class CommException extends Exception {
@@ -196,10 +215,6 @@ public class Client {
 
     public class RobotException extends CommException {
         // par ex si robot envoi mauvaise reponse, pb cote robot en general
-    }
-
-    public boolean isMoving() {
-        return isMoving;
     }
 
 
