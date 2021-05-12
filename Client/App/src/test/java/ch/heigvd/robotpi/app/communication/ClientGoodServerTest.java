@@ -83,7 +83,7 @@ class ClientGoodServerTest {
 
    @Test
    void disconnectWorks() {
-      assertThrows(IOException.class, () -> {
+      assertThrows(Client.CantConnectException.class, () -> {
          cli.connect("127.0.0.1");
          if (cli.isConnected()) {
             cli.disconnect();
