@@ -40,8 +40,6 @@ public class Client {
             throw new CantConnectException();
         }
 
-
-
         Socket socketPicture = new Socket(ipAddress, PORTPICTURE);
 
         PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
@@ -113,7 +111,10 @@ public class Client {
 
     //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
-    public void goForward() throws RobotException, IOException {
+    public void goForward() throws RobotException, IOException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("FWD\n");
         out.flush();
         if (!in.readLine().equals("FWD_OK")) {
@@ -122,7 +123,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goBackward() throws IOException, RobotException {
+    public void goBackward() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("BKWD\n");
         out.flush();
         if (!in.readLine().equals("BKWD_OK")) {
@@ -131,7 +135,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goLeft() throws IOException, RobotException {
+    public void goLeft() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("ROTATE_LEFT\n");
         out.flush();
         if (!in.readLine().equals("ROTATE_LEFT_OK")) {
@@ -140,7 +147,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goRight() throws IOException, RobotException {
+    public void goRight() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("ROTATE_RIGHT\n");
         out.flush();
         if (!in.readLine().equals("ROTATE_RIGHT_OK")) {
@@ -149,7 +159,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void stop() throws IOException, RobotException {
+    public void stop() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("STOP\n");
         out.flush();
         if (!in.readLine().equals("STOP_OK")) {
@@ -159,7 +172,10 @@ public class Client {
     }
 
     //TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
-    public void goFrontLeft() throws IOException, RobotException {
+    public void goFrontLeft() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("FRONT_L\n");
         out.flush();
         if (!in.readLine().equals("FRONT_L_OK")) {
@@ -168,7 +184,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goFrontRight() throws RobotException, IOException {
+    public void goFrontRight() throws RobotException, IOException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("FRONT_R\n");
         out.flush();
         if (!in.readLine().equals("FRONT_R_OK")) {
@@ -177,7 +196,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goBackwardsRight() throws IOException, RobotException {
+    public void goBackwardsRight() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("BCK_R\n");
         out.flush();
         if (!in.readLine().equals("BCK_R_OK")) {
@@ -186,7 +208,10 @@ public class Client {
         isMoving = true;
     }
 
-    public void goBackwardsLeft() throws IOException, RobotException {
+    public void goBackwardsLeft() throws IOException, RobotException, CantConnectException {
+        if (!isConnected) {
+            throw new CantConnectException();
+        }
         out.print("BCK_L\n");
         out.flush();
         if (!in.readLine().equals("BCK_L_OK")) {
