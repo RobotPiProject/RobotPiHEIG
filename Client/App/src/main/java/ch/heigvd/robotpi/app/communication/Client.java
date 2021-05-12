@@ -104,6 +104,9 @@ public class Client {
         out.flush();
         if (!in.readLine().equals("PING")) {
             isConnected = false;
+            in.close();
+            out.close();
+            clientSocket.close();
             throw new LostConnectionException();
         }
     }

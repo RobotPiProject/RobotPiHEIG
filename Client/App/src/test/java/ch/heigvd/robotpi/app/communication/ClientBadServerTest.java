@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -47,10 +48,11 @@ class ClientBadServerTest {
    }
 
    @Test
-   void pingThrowsException() {
+   void pingThrowsException() throws Client.CantConnectException, IOException, Client.IncorrectDeviceException {
       assertThrows(Client.LostConnectionException.class, () -> {
          cli.ping();
       });
+      cli.connect("127.0.0.1");
    }
 
    @Test
@@ -93,6 +95,7 @@ class ClientBadServerTest {
       assertThrows(Client.RobotException.class, () -> {
          cli.stop();
       });
+
    }
 
    @Test
