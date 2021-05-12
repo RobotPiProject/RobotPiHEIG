@@ -1,10 +1,17 @@
 package ch.heigvd.robotpi.app.communication;
 
 import ch.heigvd.robotpi.servertest.Server;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -41,46 +48,82 @@ class ClientBadServerTest {
    }
 
    @Test
-   void pingTrowsException() {
+   void pingThrowsException() throws Client.CantConnectException, IOException, Client.IncorrectDeviceException {
       assertThrows(Client.LostConnectionException.class, () -> {
          cli.ping();
+      });
+      cli.connect("127.0.0.1");
+   }
+
+   @Test
+   void pictureThrowsException() {
+      assertThrows(Client.RobotException.class, () -> {
+         cli.takePicture(new File(".").getCanonicalPath() + "/figures/imageTest");
       });
    }
 
    @Test
-   void goForwardTrowsException() {
+   void goForwardThrowsException() {
       assertThrows(Client.RobotException.class, () -> {
          cli.goForward();
       });
    }
 
    @Test
-   void goBackwardTrowsException() {
+   void goBackwardThrowsException() {
       assertThrows(Client.RobotException.class, () -> {
          cli.goBackward();
       });
    }
 
    @Test
-   void goLeftTrowsException() {
+   void goLeftThrowsException() {
       assertThrows(Client.RobotException.class, () -> {
          cli.goLeft();
       });
    }
 
    @Test
-   void goRightTrowsException() {
+   void goRightThrowsException() {
       assertThrows(Client.RobotException.class, () -> {
          cli.goRight();
       });
    }
 
    @Test
-   void stopTrowsException() {
+   void stopThrowsException() {
       assertThrows(Client.RobotException.class, () -> {
          cli.stop();
       });
+
    }
 
-   // TODO goFrontLeft and next
+   @Test
+   void goFrontLeftThrowsException() {
+      assertThrows(Client.RobotException.class, () -> {
+         cli.goFrontLeft();
+      });
+   }
+
+   @Test
+   void goFrontRightThrowsException() {
+      assertThrows(Client.RobotException.class, () -> {
+         cli.goFrontRight();
+      });
+   }
+
+   @Test
+   void goBackwardsRightThrowsException() {
+      assertThrows(Client.RobotException.class, () -> {
+         cli.goBackwardsRight();
+      });
+   }
+
+   @Test
+   void goBackwardsLeftThrowsException() {
+      assertThrows(Client.RobotException.class, () -> {
+         cli.goBackwardsLeft();
+      });
+   }
+
 }

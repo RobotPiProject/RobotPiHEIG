@@ -59,6 +59,7 @@ public class UIController {
    private boolean downPressed = false;
 
    private boolean newInstruction = false;
+   private boolean justDisconnected = false;
 
    @FXML private Button BFrontLeft;
    @FXML private Button BFront;
@@ -136,6 +137,7 @@ public class UIController {
          @Override
          public void handle(long l) {
             if (worker.isConnected()) {
+               justDisconnected = true;
                try {
                   mutex.acquire();
                   if (newInstruction) {
@@ -166,7 +168,6 @@ public class UIController {
                            client.stop();
                         }
                      }
-                  } else {
                      newInstruction = false;
                   }
                } catch (IOException e) {
@@ -180,6 +181,11 @@ public class UIController {
                   e.printStackTrace();
                } finally {
                   mutex.release();
+               }
+            } else {
+               if (justDisconnected) {
+                  LConnectionStatus.setText("Disconnected");
+                  justDisconnected = false;
                }
             }
          }
@@ -210,9 +216,7 @@ public class UIController {
             client.disconnect();
          }
       } catch (IOException e) {
-         e.printStackTrace();
       } catch (InterruptedException e) {
-         e.printStackTrace();
       } finally {
          mutex.release();
       }
@@ -550,11 +554,8 @@ public class UIController {
                   client.ping();
                } catch (InterruptedException e) {
                   e.printStackTrace();
-               } catch (Client.LostConnectionException e) {
+               } catch (Client.LostConnectionException | IOException e) {
                   connected = false;
-                  LConnectionStatus.setText("Disconnected");
-               } catch (IOException e) {
-                  e.printStackTrace();
                } finally {
                   mutex.release();
                }
