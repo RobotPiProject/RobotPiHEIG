@@ -153,6 +153,8 @@ void *img_task(void *ptr) {
         buffer[strlen(buffer)] = '\n';
         send_msg(img_client_sockfd, buffer, strlen(buffer));
     }
+    /* start sending image */
+
     shutdown_inet_stream_socket(img_server_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
     pthread_exit(NULL);
 }

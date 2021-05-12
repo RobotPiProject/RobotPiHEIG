@@ -65,7 +65,7 @@ void *session_task(void *sockfd) {
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-    unsigned int bytes_sent, res_len;
+    unsigned int res_len;
     while (1) {
         unsigned int total_bytes = read_msg(client_sockfd, buffer, cmd, BUFFER_SIZE);
         // strip new line
