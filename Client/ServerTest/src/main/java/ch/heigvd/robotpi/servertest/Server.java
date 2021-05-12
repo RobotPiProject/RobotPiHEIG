@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 public class Server implements Runnable {
 
    final static Logger LOG = Logger.getLogger(Server.class.getName());
+   private final boolean testRun;
    private ServerSocket serverSocket;
    private Socket clientSocket = null;
    private BufferedReader in = null;
@@ -26,13 +28,12 @@ public class Server implements Runnable {
    private int port;
    private String serverType;
    private PictureServer pictureServer;
-   private final boolean testRun;
    private boolean stopRequested = false;
 
    /**
     * Constructor
     *
-    * @param port the port to listen on
+    * @param port    the port to listen on
     * @param testRun
     */
    public Server(int port, String serverType, boolean testRun) {
@@ -47,7 +48,6 @@ public class Server implements Runnable {
          this.start();
          this.serveClients();
       } catch (IOException e) {
-         e.printStackTrace();
       }
    }
 
@@ -59,22 +59,9 @@ public class Server implements Runnable {
       pictureThread.start();
    }
 
-   private void stop() throws IOException {
-      LOG.log(Level.INFO, "Stop {0} server ...", serverType);
-      clientSocket.close();
-      in.close();
-      out.close();
-      serverSocket.close();
-      pictureServer.stop();
-   }
-
-   public void stopExecution(){
+   public void stopExecution() {
       stopRequested = true;
-      try {
-         stop();
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
+      stop();
    }
 
    /**
@@ -84,11 +71,15 @@ public class Server implements Runnable {
 
       while (!stopRequested) {
          LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", port);
-         clientSocket = serverSocket.accept();
+         try {
+            clientSocket = serverSocket.accept();
+         } catch (SocketException e){
+            return;
+         }
          in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-         out = new PrintWriter(clientSocket.getOutputStream(),true);
-         LOG.log(Level.INFO,"Received message from client on login : {0}", in.readLine());
-         out.print(ProtocolCommands.conn.getMessageConfirmation()+"\n");
+         out = new PrintWriter(clientSocket.getOutputStream(), true);
+         LOG.log(Level.INFO, "Received message from client on login : {0}", in.readLine());
+         out.print(ProtocolCommands.conn.getMessageConfirmation() + "\n");
          out.flush();
          LOG.log(Level.INFO, "send CONN_OK to client");
 
@@ -189,8 +180,10 @@ public class Server implements Runnable {
                         LOG.info(ProtocolCommands.stop.getMessageConfirmation());
                         // To stop the server used in ClientGoodServerTest
                         // The cli.stop() func isn't used in these test
-                        this.stop();
-                        return;
+                        if (testRun) {
+                           this.stop();
+                           return;
+                        }
                      } else {
                         out.print("STOPP");
                         LOG.info("STOPP");
@@ -211,28 +204,37 @@ public class Server implements Runnable {
       }
    }
 
+   private void stop() {
+      try {
+         LOG.log(Level.INFO, "Stop {0} server ...", serverType);
+         if (clientSocket != null) {
+            clientSocket.close();
+            in.close();
+            out.close();
+         }
+         serverSocket.close();
+         pictureServer.stop();
+      } catch (IOException e) {
+      }
+   }
+
    /**
     * A server that handles the picture side of the robot. It also has the same behaviour as the main class Server in
     * case the attribute serverType equals "bad"
     */
    class PictureServer implements Runnable {
       final Logger LOG = Logger.getLogger(Server.class.getName());
+      private final int PORT = 2026;
       private ServerSocket serverSocket;
       private Socket clientSocket = null;
-      private final int PORT = 2026;
       private BufferedReader in = null;
       private PrintWriter out = null;
       private BufferedOutputStream imageOut = null;
       private boolean running = true;
 
-      private void start() throws IOException {
-         LOG.log(Level.INFO, "Start picture server ...");
-         serverSocket = new ServerSocket(PORT);
-      }
-
       public void stop() throws IOException {
          LOG.log(Level.INFO, "Stop picture server ...");
-         if (clientSocket!=null) {
+         if (clientSocket != null) {
             clientSocket.close();
             in.close();
             out.close();
@@ -251,23 +253,33 @@ public class Server implements Runnable {
          }
       }
 
+      private void start() throws IOException {
+         LOG.log(Level.INFO, "Start picture server ...");
+         serverSocket = new ServerSocket(PORT);
+      }
+
       /**
        * Sends a picture to the connecting client. The picture is always the same
+       *
        * @throws IOException
        */
       private void listen() throws IOException {
-         while (true){
+         while (true) {
             LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
-            clientSocket = serverSocket.accept();
-            if (!running){
+            try {
+               clientSocket = serverSocket.accept();
+            } catch (SocketException e){
+
+            }
+            if (!running) {
                break;
             }
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream());
             imageOut = new BufferedOutputStream(clientSocket.getOutputStream());
-            String message  = in.readLine();
-            LOG.log(Level.INFO, "Received first message from client {0}",message);
-            if (!message.equals("PICTURE")){
+            String message = in.readLine();
+            LOG.log(Level.INFO, "Received first message from client {0}", message);
+            if (!message.equals("PICTURE")) {
                out.print("CMD_ERR\n");
                out.flush();
                in.close();
@@ -281,7 +293,7 @@ public class Server implements Runnable {
                out.flush();
                String response;
                do {
-                  LOG.log(Level.INFO,"Sending a picture...");
+                  LOG.log(Level.INFO, "Sending a picture...");
                   BufferedImage bi = ImageIO.read(PictureServer.class.getResource("logo.png"));
                   ImageIO.write(bi, "png", imageOut);
                   response = in.readLine();

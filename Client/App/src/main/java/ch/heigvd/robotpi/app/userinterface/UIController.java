@@ -164,7 +164,6 @@ public class UIController {
                            client.stop();
                         }
                      }
-                  } else {
                      newInstruction = false;
                   }
                } catch (IOException e) {
