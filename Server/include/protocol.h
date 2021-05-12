@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <libinetsocket.h>
+#include <pthread.h>
+#include <server.h>
 
 #define CONN_OK 42
 #define CONN_ERR 43
@@ -20,11 +23,18 @@
 #define BCK_R_OK 54
 #define CMD_ERR 55
 #define PING 56
+#define IMG_OK 57
+#define IMG_ERR 58
+#define IMG_SIZE_OK 59
 
 #define CMD_LEN 16
+
+#define LISTENING_IMG_PORT "2026"
 
 void put_response(char *response, int response_code);
 
 int process_cmd(char *cmd, char *response);
+
+void *img_task(void *ptr);
 
 #endif

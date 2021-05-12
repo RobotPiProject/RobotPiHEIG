@@ -3,56 +3,71 @@
 
 int client_connected = 0;
 
-void *session_task(void *ptr) {
-    int client_sockfd = *(int*) ptr;
+unsigned int read_msg(int sockfd, char *buffer, char *cmd, size_t buffer_size) {
+    unsigned int bytes_read;
+    int cmd_end = 0;
+    unsigned int current_offet = 0;
+    unsigned int total_bytes = 0;
+    while (!cmd_end) {
+        bytes_read = recv(sockfd, buffer, buffer_size, 0);
+        total_bytes += bytes_read;
+
+        if (bytes_read < 0) {
+            fprintf(stderr, "Error reading socket\n");
+            pthread_exit(NULL);
+        }
+        if (bytes_read == 0) { // connection is closed
+            fprintf(stdout, "Client disconnected\n");
+            pthread_exit(NULL);
+        }
+
+        fprintf(stdout, "%d bytes received:", bytes_read);
+        for (int i = 0; i < bytes_read; i++) {
+            fprintf(stdout, " 0x%X", buffer[i]);
+        }
+        fprintf(stdout, "\n");
+        for (int i = 0; i < bytes_read; i++) {
+            if (buffer[i] == '\n') {
+                cmd_end = 1;
+            }
+        }
+
+        size_t buffer_len = bytes_read;
+        /* Do not write past the end of the cmd array */
+        if (total_bytes > CMD_LEN) {
+            fprintf(stderr, "Command too long, truncating\n");
+            buffer_len = total_bytes-CMD_LEN;
+        }
+        memcpy(cmd + current_offet * sizeof(char), buffer, buffer_len);
+        current_offet += bytes_read;
+        explicit_bzero(buffer, buffer_size);
+    }
+    return total_bytes;
+}
+
+unsigned int send_msg(int sockfd, char *msg, size_t msg_len) {
+    unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
+    fprintf(stdout, "%d bytes sent\n", bytes_sent );
+    if (bytes_sent < 0) {
+        fprintf(stderr, "Error sending response\n");
+    }
+    if (bytes_sent < msg_len) {
+        fprintf(stderr, "Could not send all bytes\n");
+    }
+    return bytes_sent;
+}
+
+void *session_task(void *sockfd) {
+    int client_sockfd = *(int*) sockfd;
     char buffer[BUFFER_SIZE];
     char cmd[CMD_LEN];
     char response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-    unsigned int bytes_read, bytes_sent, res_len;
+    unsigned int bytes_sent, res_len;
     while (1) {
-        int cmd_end = 0;
-        unsigned int start = 0;
-        unsigned int total_bytes = 0;
-        while (!cmd_end) {
-            bytes_read = recv(client_sockfd, buffer, BUFFER_SIZE, 0);
-            total_bytes += bytes_read;
-
-            if (bytes_read < 0) {
-                fprintf(stderr, "Error reading socket\n");
-                pthread_exit(NULL);
-            }
-            if (bytes_read == 0) { // connection is closed
-                fprintf(stdout, "Client disconnected\n");
-                pthread_exit(NULL);
-            }
-
-            fprintf(stdout, "%d bytes received:", bytes_read);
-            for (int i = 0; i < bytes_read; i++) {
-                fprintf(stdout, " 0x%X", buffer[i]);
-            }
-            fprintf(stdout, "\n");
-            for (int i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    cmd_end = 1;
-                }
-            }
-
-            int overflow = 0;
-            if (total_bytes > CMD_LEN) {
-                fprintf(stderr, "Command too long\n");
-                overflow = 1;
-            }
-            /* Do not write past the end of the cmd array */
-            if (!overflow) {
-                memcpy(cmd + start * sizeof(char), buffer, CMD_LEN-total_bytes);
-            }
-            start += bytes_read;
-            explicit_bzero(buffer, BUFFER_SIZE);
-        }
-
+        unsigned int total_bytes = read_msg(client_sockfd, buffer, cmd, BUFFER_SIZE);
         // strip new line
         cmd[strcspn(cmd, "\n")] = 0;
         fprintf(stdout, "Command received: %s", cmd);
@@ -65,7 +80,7 @@ void *session_task(void *ptr) {
         if (!client_connected) {
             if (!strncmp(cmd, "DISCONN", CMD_LEN)) {
                 put_response(response, DISCONN_ERR);
-            } else if (strncmp(cmd, "CONN", CMD_LEN)) {
+            } else if (strncmp(cmd, "CONN", CMD_LEN) != 0) {
                 put_response(response, CMD_ERR);
             } else {
                 client_connected = 1;
@@ -87,11 +102,8 @@ void *session_task(void *ptr) {
         // append new line character
         res_len = strlen(response);
         response[res_len] = '\n';
-        bytes_sent = send(client_sockfd, response, res_len + 1, 0);
-        fprintf(stdout, "%d bytes sent\n", bytes_sent );
-        if (bytes_read < 0) {
-            fprintf(stderr, "Error sending response\n");
-        }
+        res_len++;
+        send_msg(client_sockfd, response, res_len);
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
     }

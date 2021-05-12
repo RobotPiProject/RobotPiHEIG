@@ -1,6 +1,9 @@
 #include <protocol.h>
 #include <motor.h>
 
+int img_req = 0;
+pthread_t img_t;
+
 /**
  * Put the string representation of the given response code in response
  * @param response the character string the representation will be written into
@@ -50,6 +53,16 @@ void put_response(char *response, int response_code) {
         case PING:
             strncpy(response, "PING", CMD_LEN);
             break;
+        case IMG_OK:
+            img_req = 1;
+            strncpy(response, "IMG_OK", CMD_LEN);
+            break;
+        case IMG_ERR:
+            strncpy(response, "IMG_ERR", CMD_LEN);
+            break;
+        case IMG_SIZE_OK:
+            strncpy(response, "IMG_SIZE_OK", CMD_LEN);
+            break;
         default:
             strncpy(response, "CMD_ERR", CMD_LEN);
             break;
@@ -97,9 +110,49 @@ int process_cmd(char *cmd, char *response) {
         response_code = DISCONN_OK;
     } else if (!strncmp(cmd, "PING", CMD_LEN)) {
         response_code = PING;
+    } else if (!strncmp(cmd, "IMG", CMD_LEN)) {
+        response_code = IMG_OK;
+        pthread_create(&img_t, NULL, img_task, NULL);
     } else {
         fprintf(stdout, "Commande non reconnue : %s\n", cmd);
     }
     put_response(response, response_code);
     return 0;
+}
+
+void *img_task(void *ptr) {
+    #define SIZE 2048
+    char buffer[BUFFER_SIZE];
+    char cmd[CMD_LEN];
+    char response[CMD_LEN];
+    int img_server_sockfd = create_inet_server_socket("::", LISTENING_IMG_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
+    if (img_server_sockfd == -1) {
+        fprintf(stderr, "Could not create socket\n");
+        pthread_exit(NULL);
+    }
+    int img_client_sockfd = accept_inet_stream_socket(img_server_sockfd, 0, 0, 0, 0, 0, 0);
+    if (img_client_sockfd < 0) {
+        fprintf(stderr, "Could not create socket\n");
+        pthread_exit(NULL);
+    }
+    unsigned int total_bytes = read_msg(img_client_sockfd, cmd, buffer, BUFFER_SIZE);
+    cmd[strcspn(cmd, "\n")] = 0;
+    fprintf(stdout, "Command received: %s", cmd);
+    if (!strncmp(cmd, "IMG_SIZE", CMD_LEN)){
+        fprintf(stderr, "Invalid client response: %s\n", cmd);
+        put_response(response, IMG_ERR);
+        send_msg(img_client_sockfd, response, strlen(response));
+        shutdown_inet_stream_socket(img_server_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+        pthread_exit(NULL);
+    } else {
+        put_response(response, IMG_SIZE_OK);
+        response[strlen(response)] = '\n';
+        send_msg(img_client_sockfd, response, strlen(response));
+        explicit_bzero(buffer, BUFFER_SIZE);
+        sprintf(buffer, "%d", SIZE);
+        buffer[strlen(buffer)] = '\n';
+        send_msg(img_client_sockfd, buffer, strlen(buffer));
+    }
+    shutdown_inet_stream_socket(img_server_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+    pthread_exit(NULL);
 }
