@@ -26,10 +26,10 @@ public class Client {
         out.print("CONN\n");
         out.flush();
         String message = in.readLine();
-        if (message.equals("CONN_ERR\n")) {
+        if (message.equals("CONN_ERR")) {
             clientSocket.close();
             throw new CantConnectException();
-        } else if (!message.equals("CONN_OK\n")) {
+        } else if (!message.equals("CONN_OK")) {
             clientSocket.close();
             throw new IncorrectDeviceException();
         }
@@ -51,7 +51,7 @@ public class Client {
         outPic.flush();
         String message = inPic.readLine();
 
-        if (!message.equals("PICTURE_OK\n")) {
+        if (!message.equals("PICTURE_OK")) {
             throw new RobotException();
         }
 
@@ -89,11 +89,11 @@ public class Client {
             out.print("DISCONN\n");
             out.flush();
             message = in.readLine();
-        } while (!message.equals("DISCONN_OK\n") && count++ != 5);
+        } while (!message.equals("DISCONN_OK") && count++ != 5);
         in.close();
         out.close();
         clientSocket.close();
-        if (message.equals("DISCONN_OK\n")) {
+        if (message.equals("DISCONN_OK")) {
             isConnected = false;
         }
 
@@ -104,7 +104,7 @@ public class Client {
     public void ping() throws IOException, LostConnectionException {
         out.print("PING\n");
         out.flush();
-        if (!in.readLine().equals("PING\n")) {
+        if (!in.readLine().equals("PING")) {
             isConnected = false;
             throw new LostConnectionException();
         }
@@ -115,7 +115,7 @@ public class Client {
     public void goForward() throws RobotException, IOException {
         out.print("FWD\n");
         out.flush();
-        if (!in.readLine().equals("FWD_OK\n")) {
+        if (!in.readLine().equals("FWD_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -124,7 +124,7 @@ public class Client {
     public void goBackward() throws IOException, RobotException {
         out.print("BKWD\n");
         out.flush();
-        if (!in.readLine().equals("BKWD_OK\n")) {
+        if (!in.readLine().equals("BKWD_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -133,7 +133,7 @@ public class Client {
     public void goLeft() throws IOException, RobotException {
         out.print("ROTATE_LEFT\n");
         out.flush();
-        if (!in.readLine().equals("ROTATE_LEFT_OK\n")) {
+        if (!in.readLine().equals("ROTATE_LEFT_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -142,7 +142,7 @@ public class Client {
     public void goRight() throws IOException, RobotException {
         out.print("ROTATE_RIGHT\n");
         out.flush();
-        if (!in.readLine().equals("ROTATE_RIGHT_OK\n")) {
+        if (!in.readLine().equals("ROTATE_RIGHT_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -151,7 +151,7 @@ public class Client {
     public void stop() throws IOException, RobotException {
         out.print("STOP\n");
         out.flush();
-        if (!in.readLine().equals("STOP_OK\n")) {
+        if (!in.readLine().equals("STOP_OK")) {
             throw new RobotException();
         }
         isMoving = false;
@@ -161,7 +161,7 @@ public class Client {
     public void goFrontLeft() throws IOException, RobotException {
         out.print("FRONT_L\n");
         out.flush();
-        if (!in.readLine().equals("FRONT_L_OK\n")) {
+        if (!in.readLine().equals("FRONT_L_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -170,7 +170,7 @@ public class Client {
     public void goFrontRight() throws RobotException, IOException {
         out.print("FRONT_R\n");
         out.flush();
-        if (!in.readLine().equals("FRONT_R_OK\n")) {
+        if (!in.readLine().equals("FRONT_R_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -179,7 +179,7 @@ public class Client {
     public void goBackwardsRight() throws IOException, RobotException {
         out.print("BCK_R\n");
         out.flush();
-        if (!in.readLine().equals("BCK_R_OK\n")) {
+        if (!in.readLine().equals("BCK_R_OK")) {
             throw new RobotException();
         }
         isMoving = true;
@@ -188,7 +188,7 @@ public class Client {
     public void goBackwardsLeft() throws IOException, RobotException {
         out.print("BCK_L\n");
         out.flush();
-        if (!in.readLine().equals("BCK_L_OK\n")) {
+        if (!in.readLine().equals("BCK_L_OK")) {
             throw new RobotException();
         }
         isMoving = true;
