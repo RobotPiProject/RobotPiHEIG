@@ -156,8 +156,8 @@ public class Client {
     }
 
     public void goFrontRight() throws RobotException, IOException {
-        out.println("RIGHT_R");
-        if (!in.readLine().equals("RIGHT_R_OK")) {
+        out.println("FRONT_R");
+        if (!in.readLine().equals("FRONT_R_OK")) {
             throw new RobotException();
         }
         isMoving = true;
