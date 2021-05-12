@@ -1,4 +1,7 @@
 #include <camera.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 CamSettings settings = {512, 512, JPG, 0};
 
@@ -12,8 +15,40 @@ void setCamSettings(CamSettings newSettings)
    settings = newSettings;
 }
 
-unsigned char  camSnap(char *nameBuf, const unsigned char nameSize, const char *folderName, const unsigned char  folderNameSize)
+int camSnap(const char *name, const char *path)
 {
-   char command[128];
-   return 0;
+   char command[256] = "fswebcam";
+
+   //Set resolution
+   char tmp[128];
+   sprintf(tmp, " -r %4ux%-4u", settings.imageWidth, settings.imageHeight);
+   strcat(command, tmp);
+
+   //Set banner
+   if(!settings.useBanner)
+   {
+      strcat(command, " --no-banner");
+   }
+
+   //Set file path
+   sprintf(tmp, " %s/%s", path, name);
+   strcat(command, tmp);
+
+   //Set file format
+   char format[4];
+   switch (settings.format)
+   {
+   case JPG:
+      sprintf(format, "jpg");
+      break;
+   case PNG:
+      sprintf(format, "png");
+      break;
+   default:
+      break;
+   }
+   sprintf(tmp, ".%s", format);
+   strcat(command, tmp);
+
+   return system(command);
 }
