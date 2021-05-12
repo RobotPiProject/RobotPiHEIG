@@ -294,8 +294,9 @@ public class Server implements Runnable {
                String response;
                do {
                   LOG.log(Level.INFO, "Sending a picture...");
-                  BufferedImage bi = ImageIO.read(PictureServer.class.getResource("logo.png"));
+                  BufferedImage bi = ImageIO.read(getClass().getClassLoader().getResource("logo.png"));
                   ImageIO.write(bi, "png", imageOut);
+                  imageOut.flush();
                   response = in.readLine();
                } while (!response.equals("RECEIVED_OK"));
             } else {

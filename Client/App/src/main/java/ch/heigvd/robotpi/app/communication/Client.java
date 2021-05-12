@@ -56,8 +56,6 @@ public class Client {
         }
 
         InputStream is = socketPicture.getInputStream();
-        Scanner reader = new Scanner(is);
-        System.out.print(reader.nextLine());
         BufferedImage bi;
 
         while (true) {
