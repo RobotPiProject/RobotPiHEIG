@@ -47,7 +47,7 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
 
 unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len) {
     unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
-    fprintf(stdout, "%s%d bytes sent", prefix, bytes_sent );
+    fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
     for (int i = 0; i < bytes_sent; i++) {
         fprintf(stdout, " 0x%X", msg[i]);
     }

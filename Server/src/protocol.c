@@ -116,7 +116,7 @@ int process_cmd(char *cmd, char *response) {
 
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
-    char *fname = "/home/pi/small.jpg";
+    char *fname = "/home/pi/robot.jpg";
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
@@ -147,6 +147,7 @@ void *img_task(void *ptr) {
             if (client_connected == 1) {
                 put_response(response, PICTURE_OK);
                 response[strlen(response)] = '\n';
+                fprintf(stdout, "Sending message: %s\n", response);
                 send_msg("[pic] ", img_client_sockfd, response, strlen(response));
             } else {
                 put_response(response, PICTURE_ERR);
@@ -173,6 +174,7 @@ void *img_task(void *ptr) {
         } else {
             fprintf(stderr, "Invalid Client response: %s\n", cmd);
         }
+        fclose(file_handle);
         shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
     }
 }
