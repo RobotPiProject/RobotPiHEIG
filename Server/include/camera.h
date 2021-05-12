@@ -10,10 +10,17 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+typedef enum ImageFormat
+{
+   JPG, PNG
+}ImageFormat;
+
 typedef struct CamSettings
 {
    unsigned imageWidth;
    unsigned imageHeight;
+   ImageFormat format;
+   unsigned useBanner;
 } CamSettings;
 
 CamSettings getCamSettings();
