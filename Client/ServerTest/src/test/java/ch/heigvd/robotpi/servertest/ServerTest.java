@@ -44,7 +44,7 @@ class ServerTest {
       Thread thread = new Thread(server);
       thread.start();
 
-      Socket socket = new Socket("localhost", 2025);
+      Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
       out.println(ProtocolCommands.conn.getMessage());
@@ -76,7 +76,7 @@ class ServerTest {
       Thread thread = new Thread(server);
       thread.start();
 
-      Socket socket = new Socket("localhost", 2025);
+      Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
       out.println(ProtocolCommands.conn.getMessage());
@@ -89,7 +89,7 @@ class ServerTest {
       out.close();
       socket.close();
 
-      socket = new Socket("localhost", 2025);
+      socket = new Socket("127.0.0.1", 2025);
       in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       out = new PrintWriter(socket.getOutputStream(), true);
       out.println(ProtocolCommands.conn.getMessage());
@@ -105,7 +105,7 @@ class ServerTest {
       Thread thread = new Thread(server);
       thread.start();
 
-      Socket socket = new Socket("localhost", 2025);
+      Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
       out.println(ProtocolCommands.conn.getMessage());
