@@ -6,21 +6,13 @@
 package ch.heigvd.robotpi.app.userinterface;
 
 import ch.heigvd.robotpi.app.communication.Client;
-import ch.heigvd.robotpi.app.userinterface.settings.SettingsParams;
-import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class DiscoveryController {
    private Scene scene;
@@ -45,11 +37,15 @@ public class DiscoveryController {
     * @param primaryStage the primary stage
     */
    public void load(Stage primaryStage) {
-
+      primaryStage.setScene(scene);
+      primaryStage.setResizable(false);
+      primaryStage.setTitle("Robot PI HEIG - Discovery");
+      primaryStage.getIcons().add(new Image("image/logo.png"));
    }
 
    @FXML
    void buttonDiscoveryPressed(ActionEvent event) {
-
+      LDiscovery.setText("Discovering, please wait...");
+      //client découverte
    }
 }

@@ -181,8 +181,6 @@ public class UIController {
                } finally {
                   mutex.release();
                }
-
-
             }
          }
       };
@@ -570,6 +568,7 @@ public class UIController {
       private final String photoPath;
 
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
+
       //TODO handle exceptions
       @Override
       public void run() {
