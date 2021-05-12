@@ -70,6 +70,11 @@ public class Server implements Runnable {
 
    public void stopExecution(){
       stopRequested = true;
+      try {
+         stop();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
    }
 
    /**
@@ -77,14 +82,13 @@ public class Server implements Runnable {
     */
    public void serveClients() throws IOException {
 
-      while (true) {
+      while (!stopRequested) {
          LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", port);
          clientSocket = serverSocket.accept();
          in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-         out = new PrintWriter(clientSocket.getOutputStream());
-
+         out = new PrintWriter(clientSocket.getOutputStream(),true);
+         LOG.log(Level.INFO,"Received message from client on login : {0}", in.readLine());
          out.println("CONN_OK");
-         out.flush();
          LOG.log(Level.INFO, "send CONN_OK to client");
 
          String line;
@@ -92,56 +96,92 @@ public class Server implements Runnable {
 
          LOG.info("Reading until client send DISCONN or closes the connection...\n");
          while ((shouldRun) && (line = in.readLine()) != null) {
-            switch (line) {
-               case "PING":
+            switch (ProtocolCommands.getCommandFromMessage(line)) {
+               case ping:
                   if (serverType.equals("good")) {
-                     out.println("PING");
-                     LOG.info("PING");
+                     out.println(ProtocolCommands.ping.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.ping.getMessageConfirmation());
                   } else {
                      out.println("PINGG");
                      LOG.info("PINGG");
                   }
                   break;
-               case "FWD":
+               case forward:
                   if (serverType.equals("good")) {
-                     out.println("FWD_OK");
-                     LOG.info("FWD_OK");
+                     out.println(ProtocolCommands.forward.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.forward.getMessageConfirmation());
                   } else {
                      out.println("FWD_KO");
                      LOG.info("FWD_KO");
                   }
                   break;
-               case "BKWD":
+               case backward:
                   if (serverType.equals("good")) {
-                     out.println("BKWD_OK");
-                     LOG.info("BKWD_OK");
+                     out.println(ProtocolCommands.backward.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.backward.getMessageConfirmation());
                   } else {
                      out.println("BKWD_KO");
                      LOG.info("BKWD_KO");
                   }
                   break;
-               case "ROTATE_LEFT":
+               case rotateLeft:
                   if (serverType.equals("good")) {
-                     out.println("ROTATE_LEFT_OK");
-                     LOG.info("ROTATE_LEFT_OK");
+                     out.println(ProtocolCommands.rotateLeft.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.rotateLeft.getMessageConfirmation());
                   } else {
                      out.println("ROTATE_LEFT_KO");
                      LOG.info("ROTATE_LEFT_KO");
                   }
                   break;
-               case "ROTATE_RIGHT":
+               case rotateRight:
                   if (serverType.equals("good")) {
-                     out.println("ROTATE_RIGHT_OK");
-                     LOG.info("ROTATE_RIGHT_OK");
+                     out.println(ProtocolCommands.rotateRight.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.rotateRight.getMessageConfirmation());
                   } else {
                      out.println("ROTATE_RIGHT_KO");
                      LOG.info("ROTATE_RIGHT_KO");
                   }
                   break;
-               case "STOP":
+               case frontleft:
                   if (serverType.equals("good")) {
-                     out.println("STOP");
-                     LOG.info("STOP");
+                     out.println(ProtocolCommands.frontleft.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.frontleft.getMessageConfirmation());
+                  } else {
+                     out.println("FRONT_L_KO");
+                     LOG.info("FRONT_L_KO");
+                  }
+                  break;
+               case frontRight:
+                  if (serverType.equals("good")) {
+                     out.println(ProtocolCommands.frontRight.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.frontRight.getMessageConfirmation());
+                  } else {
+                     out.println("FRONT_R_KO");
+                     LOG.info("FRONT_R_KO");
+                  }
+                  break;
+               case backwardsRight:
+                  if (serverType.equals("good")) {
+                     out.println(ProtocolCommands.backwardsRight.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.backwardsRight.getMessageConfirmation());
+                  } else {
+                     out.println("BCK_R_KO");
+                     LOG.info("BCK_R_KO");
+                  }
+                  break;
+               case backwardsLeft:
+                  if (serverType.equals("good")) {
+                     out.println(ProtocolCommands.backwardsLeft.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.backwardsLeft.getMessageConfirmation());
+                  } else {
+                     out.println("BCK_L_KO");
+                     LOG.info("BCK_L_KO");
+                  }
+                  break;
+               case stop:
+                  if (serverType.equals("good")) {
+                     out.println(ProtocolCommands.stop.getMessageConfirmation());
+                     LOG.info(ProtocolCommands.stop.getMessageConfirmation());
                      // To stop the server used in ClientGoodServerTest
                      // The cli.stop() func isn't used in these test
                      this.stop();
@@ -151,21 +191,13 @@ public class Server implements Runnable {
                      LOG.info("STOPP");
                   }
                   break;
-               case "DISCONN":
-                  out.println("DISCONN_OK");
+               case disconnect:
+                  out.println(ProtocolCommands.disconnect.getMessageConfirmation());
                   shouldRun = false;
                   if (serverType.equals("bad"))
                   // To stop the server used in ClientBadServerTest.
                   // cli.dissconnect() is run only once after all tests completed.
                   { this.stop(); }
-            }
-
-            out.flush();
-         }
-         if (!testRun){
-            if (stopRequested){
-               this.stop();
-               return;
             }
          }
       }
@@ -186,15 +218,17 @@ public class Server implements Runnable {
       private boolean running = true;
 
       private void start() throws IOException {
-         LOG.log(Level.INFO, "Start {0} server ...", serverType);
-         serverSocket = new ServerSocket(port);
+         LOG.log(Level.INFO, "Start picture server ...");
+         serverSocket = new ServerSocket(PORT);
       }
 
       public void stop() throws IOException {
-         LOG.log(Level.INFO, "Stop {0} server ...", serverType);
-         clientSocket.close();
-         in.close();
-         out.close();
+         LOG.log(Level.INFO, "Stop picture server ...");
+         if (clientSocket!=null) {
+            clientSocket.close();
+            in.close();
+            out.close();
+         }
          serverSocket.close();
          running = false;
       }
@@ -215,7 +249,7 @@ public class Server implements Runnable {
        */
       private void listen() throws IOException {
          while (true){
-            LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", port);
+            LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
             clientSocket = serverSocket.accept();
             if (!running){
                break;
