@@ -13,7 +13,8 @@ LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
 LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
-TEST_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+TEST_ROBOT_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
@@ -65,10 +66,10 @@ test_server: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 test_robot: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 
 $(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS)
-	$(BUILDTOOLS)-$(CC) $^ $(TEST_LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_SERVER_LDFLAGS) -o $@
 
 $(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
-	$(BUILDTOOLS)-$(CC) $^ $(TEST_LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_ROBOT_LDFLAGS) -o $@
 
 #2)
 lib: $(LIBNAME)
@@ -116,10 +117,10 @@ deploy_server_tests: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_SERVER_APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_SERVER_APPNAME) $(PI_INSTALL_DIR)/$(TEST_SERVER_APPNAME)'
 
-deploy_motor_tests: $(OUT_DIR)/$(TEST_MOTOR_APPNAME))
+deploy_robot_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
-	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_MOTOR_APPNAME)'
-	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_MOTOR_APPNAME) $(PI_INSTALL_DIR)/$(TEST_MOTOR_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_ROBOT_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_ROBOT_APPNAME) $(PI_INSTALL_DIR)/$(TEST_ROBOT_APPNAME)'
 
 clean:
 	rm -f $(SRC_DIR)/*.o
