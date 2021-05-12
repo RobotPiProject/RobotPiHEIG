@@ -176,7 +176,8 @@ public class UIController {
                                         "The robot seems to have had an error while moving. Please check the robot " +
                                         "and " + "make sure he is not blocked.");
                } catch (InterruptedException e) {
-                  e.printStackTrace();
+               } catch (Client.CantConnectException e) {
+
                } finally {
                   mutex.release();
                }
