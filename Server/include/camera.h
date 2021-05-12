@@ -25,7 +25,7 @@ typedef struct CamSettings
 
 CamSettings getCamSettings();
 
-void setCamSettings(CamSettings);
+void setCamSettings(CamSettings newSettings);
 
 /**
  * @brief Takes a picture and stores it in the given folder
