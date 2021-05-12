@@ -1,4 +1,5 @@
 #include <protocol.h>
+#include <motor.h>
 
 /**
  * Put the string representation of the given response code in response
@@ -66,22 +67,31 @@ int process_cmd(char *cmd, char *response) {
     if (!strncmp(cmd, "CONN", CMD_LEN)) {
         response_code = CONN_OK;
     } else if (!strncmp(cmd, "FWD", CMD_LEN)) {
+        runForward(DEFAULT_SPEED);
         response_code = FWD_OK;
     } else if (!strncmp(cmd, "BKWD", CMD_LEN)) {
+        runBackward(DEFAULT_SPEED);
         response_code = BKWD_OK;
     } else if (!strncmp(cmd, "STOP", CMD_LEN)) {
+        idle();
         response_code = STOP_OK;
     } else if (!strncmp(cmd, "ROTATE_LEFT", CMD_LEN)) {
+        rotateLeft(DEFAULT_SPEED);
         response_code = ROTATE_LEFT_OK;
     } else if (!strncmp(cmd, "ROTATE_RIGHT", CMD_LEN)) {
+        rotateRight(DEFAULT_SPEED);
         response_code = ROTATE_RIGHT_OK;
     } else if (!strncmp(cmd, "FRONT_L", CMD_LEN)) {
+        turnLeftF(DEFAULT_SPEED);
         response_code = FRONT_L_OK;
     } else if (!strncmp(cmd, "FRONT_R", CMD_LEN)) {
+        turnRightF(DEFAULT_SPEED);
         response_code = FRONT_R_OK;
     } else if (!strncmp(cmd, "BCK_L", CMD_LEN)) {
+        turnLeftB(DEFAULT_SPEED);
         response_code = BCK_L_OK;
     } else if (!strncmp(cmd, "BCK_R", CMD_LEN)) {
+        turnRightB(DEFAULT_SPEED);
         response_code = BCK_R_OK;
     } else if (!strncmp(cmd, "DISCONN", CMD_LEN)) {
         response_code = DISCONN_OK;

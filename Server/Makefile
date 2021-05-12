@@ -12,7 +12,9 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
-LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
+TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+TEST_ROBOT_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
@@ -64,10 +66,10 @@ test_server: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 test_robot: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 
 $(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS)
-	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_SERVER_LDFLAGS) -o $@
 
 $(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
-	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
+	$(BUILDTOOLS)-$(CC) $^ $(TEST_ROBOT_LDFLAGS) -o $@
 
 #2)
 lib: $(LIBNAME)
@@ -75,7 +77,7 @@ lib: $(LIBNAME)
 $(LIBNAME): $(LIBOBJS)
 	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
 
-install_libs: install_bcm2835 install_libMotor
+install_libs: install_bcm2835 install_libMotor install_libcmocka install_libsocket
 
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
@@ -89,6 +91,16 @@ install_bcm2835:
 install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
+install_libcmocka:
+	cp $(LIB_DIR)/libcmocka.so.0.7.0 $(SYSLIBS)
+	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
+	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
+	cp $(SRC_DIR)/cmocka/*.h $(HEADERS)/
+
+install_libsocket:
+	cp $(LIB_DIR)/libsocket.a $(SYSLIBS)
+	cp $(SRC_DIR)/libsocket/*.h $(HEADERS)/
+
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
 	setcap cap_sys_rawio+ep $(PI_INSTALL_DIR)/$(APPNAME)
@@ -97,6 +109,18 @@ deploy: $(OUT_DIR)/$(APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(APPNAME) $(PI_INSTALL_DIR)/$(APPNAME)'
+
+deploy_tests: deploy_server_tests deploy_motor_tests
+
+deploy_server_tests: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
+	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_SERVER_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_SERVER_APPNAME) $(PI_INSTALL_DIR)/$(TEST_SERVER_APPNAME)'
+
+deploy_robot_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
+	scp $^ pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_ROBOT_APPNAME)'
+	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_ROBOT_APPNAME) $(PI_INSTALL_DIR)/$(TEST_ROBOT_APPNAME)'
 
 clean:
 	rm -f $(SRC_DIR)/*.o

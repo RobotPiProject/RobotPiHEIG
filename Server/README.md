@@ -44,6 +44,13 @@ This step is done in the `deploy` target of the Makefile.
 
 The following must be done only once for each time Raspbian is reinstalled :
 
+0. Enable `libcap` support
+
+```
+sudo apt-get update
+sudo apt-get install libcap2 libcap-dev
+```
+
 1. Add the current user to `kmem` group
 
 ```
@@ -77,6 +84,12 @@ $ git clone git@github.com:tttapa/RPi-Cpp-Toolchain.git
 $ cp x-tools /opt -r
 ```
 
+4. Install needed librairies into the toolchain. From the root of the Server source directory :
+
+```sh
+$ make install_libs
+```
+
 ### Library install locations
 
 For cross-compiling purposes, header files shall be put in the following location in the toolchain:
@@ -90,4 +103,4 @@ Compiled library files shall be put in the following location in the toolchain:
 /opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/lib
 ```
 
-You can do both these by calling `make install_bcm2835` as root.
+You can do both these by calling `make install_libs` as root.
