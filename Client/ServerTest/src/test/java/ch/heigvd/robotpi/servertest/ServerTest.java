@@ -28,6 +28,11 @@ class ServerTest {
       Server server = new Server(2025, "good", true);
       Thread thread = new Thread(server);
       thread.start();
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
 
       Socket socket = new Socket("localhost", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -43,6 +48,11 @@ class ServerTest {
       Server server = new Server(2025, "good", true);
       Thread thread = new Thread(server);
       thread.start();
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
 
       Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -75,6 +85,11 @@ class ServerTest {
       Server server = new Server(2025, "good", true);
       Thread thread = new Thread(server);
       thread.start();
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
 
       Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -104,6 +119,11 @@ class ServerTest {
       Server server = new Server(2025, "good", true);
       Thread thread = new Thread(server);
       thread.start();
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
 
       Socket socket = new Socket("127.0.0.1", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
