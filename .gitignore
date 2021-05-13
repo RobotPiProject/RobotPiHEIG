@@ -4,3 +4,6 @@ Client/.idea/
 Client/target/
 
 .vscode/
+Client/App/target/
+
+Client/ServerTest/target/
