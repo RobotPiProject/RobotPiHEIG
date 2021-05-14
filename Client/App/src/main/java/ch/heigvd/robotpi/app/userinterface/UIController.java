@@ -10,6 +10,7 @@ import ch.heigvd.robotpi.app.userinterface.settings.SettingsParams;
 import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -20,6 +21,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
@@ -180,8 +182,6 @@ public class UIController {
                } finally {
                   mutex.release();
                }
-
-
             } else {
                if (justDisconnected) {
                   LConnectionStatus.setText("Disconnected");
@@ -284,7 +284,21 @@ public class UIController {
 
    @FXML
    private void openDiscoverWindow(ActionEvent event) {
-
+      try {
+         FXMLLoader discoveryViewLoader = new FXMLLoader();
+         discoveryViewLoader.setLocation(getClass().getClassLoader().getResource("discoveryView.fxml"));
+         Scene discoveryScene = new Scene(discoveryViewLoader.load());
+         DiscoveryController discoveryController = discoveryViewLoader.getController();
+         discoveryController.setScene(discoveryScene, client);
+         Stage stage = new Stage();
+         stage.setAlwaysOnTop(true);
+         discoveryController.load(stage);
+         stage.initOwner(scene.getWindow());
+         stage.initModality(Modality.APPLICATION_MODAL);
+         stage.showAndWait();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
    }
 
    @FXML
@@ -555,6 +569,7 @@ public class UIController {
       private final String photoPath;
 
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
+
       //TODO handle exceptions
       @Override
       public void run() {
