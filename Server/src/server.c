@@ -14,6 +14,7 @@ void InitializeSSL()
     OpenSSL_add_all_algorithms();
 }
 
+/*
 void DestroySSL()
 {
     ERR_free_strings();
@@ -25,6 +26,7 @@ void ShutdownSSL()
     SSL_shutdown(ssl);
     SSL_free(ssl);
 }
+*/
 
 SSL_CTX *create_context()
 {
