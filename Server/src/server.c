@@ -64,7 +64,7 @@ void configure_context(SSL_CTX *ctx)
 
 void *session_task(void *ptr, void *sslPtr) {
     int client_sockfd = *(int*) ptr;
-    SSL ssl = *(SSL*) sslPtr;
+    SSL *ssl = *(SSL**) sslPtr;
     char buffer[BUFFER_SIZE];
     char cmd[CMD_LEN];
     char response[CMD_LEN];
