@@ -17,6 +17,6 @@
 #define BUFFER_SIZE 32
 
 int server();
-void *session_task(void *ptr);
+void *session_task(void *ptr, void *sslPtr);
 
 #endif
