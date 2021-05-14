@@ -162,7 +162,7 @@ public class Client {
         if (!isConnected) {
             throw new CantConnectException();
         }
-        
+
         out.print("FWD\n");
         out.flush();
         if (!in.readLine().equals("FWD_OK")) {
