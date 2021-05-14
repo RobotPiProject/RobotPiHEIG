@@ -5,9 +5,13 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
+import javax.net.ssl.*;
 
 public class Client {
-    private Socket clientSocket;
+    //private Socket clientSocket;
+    private SSLSocket clientSocket = null;
+    private static final String[] protocols = new String[] {"TLSv1.3"};
+    private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"}; // TLS_AES_128_GCM_SHA256
     private String ipAddress;
     private PrintWriter out;
     private BufferedReader in;
@@ -18,21 +22,61 @@ public class Client {
 
 
     public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
-        clientSocket = new Socket(ip, PORT);
-        ipAddress = ip;
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        isConnected = true;
-        out.print("CONN\n");
-        out.flush();
-        String message = in.readLine();
-        if (message.equals("CONN_ERR")) {
-            clientSocket.close();
+        try {
+            clientSocket = createSocket(ip, PORT);
+
+            ipAddress = ip;
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            printSocketInfo(clientSocket);
+            clientSocket.startHandshake();
+
+            isConnected = true;
+            out.print("CONN\n");
+            out.flush();
+            String message = in.readLine();
+            if (message.equals("CONN_ERR")) {
+                clientSocket.close();
+                throw new CantConnectException();
+            } else if (!message.equals("CONN_OK")) {
+                clientSocket.close();
+                throw new IncorrectDeviceException();
+            }
+        } catch (Exception e){
+            System.err.println(e.toString());
             throw new CantConnectException();
-        } else if (!message.equals("CONN_OK")) {
-            clientSocket.close();
-            throw new IncorrectDeviceException();
         }
+    }
+
+    private static SSLSocket createSocket(String host, int port) throws IOException {
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault()
+                .createSocket(host, port);
+        socket.setEnabledProtocols(protocols);
+        socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+
+        // REMOVE
+        //for (String c : socket.getSupportedProtocols())
+          //  System.out.println(c);
+        return socket;
+    }
+
+    // Print SSL data
+    private static void printSocketInfo(SSLSocket s) {
+        System.out.println("Socket class: "+s.getClass());
+        System.out.println("   Remote address = "
+                +s.getInetAddress().toString());
+        System.out.println("   Remote port = "+s.getPort());
+        System.out.println("   Local socket address = "
+                +s.getLocalSocketAddress().toString());
+        System.out.println("   Local address = "
+                +s.getLocalAddress().toString());
+        System.out.println("   Local port = "+s.getLocalPort());
+        System.out.println("   Need client authentication = "
+                +s.getNeedClientAuth());
+        SSLSession ss = s.getSession();
+        System.out.println("   Cipher suite = "+ss.getCipherSuite());
+        System.out.println("   Protocol = "+ss.getProtocol());
     }
 
     public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
@@ -40,40 +84,43 @@ public class Client {
             throw new CantConnectException();
         }
 
+        try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
 
+            PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+            BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
-        Socket socketPicture = new Socket(ipAddress, PORTPICTURE);
+            printSocketInfo(socketPicture);
+            socketPicture.startHandshake();
 
-        PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
-        BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+            outPic.print("PICTURE\n");
+            outPic.flush();
+            String message = inPic.readLine();
 
-        outPic.print("PICTURE\n");
-        outPic.flush();
-        String message = inPic.readLine();
-
-        if (!message.equals("PICTURE_OK")) {
-            throw new RobotException();
-        }
-
-        InputStream is = socketPicture.getInputStream();
-        BufferedImage bi;
-
-        while (true) {
-            try {
-                bi = ImageIO.read(is);
-                outPic.print("RECEIVED_OK\n");
-                outPic.flush();
-                break;
-            } catch (IOException e) {
-                outPic.print("RESEND_PICTURE\n");
-                outPic.flush();
+            if (!message.equals("PICTURE_OK")) {
+                throw new RobotException();
             }
+
+            InputStream is = socketPicture.getInputStream();
+            BufferedImage bi;
+
+            while (true) {
+                try {
+                    bi = ImageIO.read(is);
+                    outPic.print("RECEIVED_OK\n");
+                    outPic.flush();
+                    break;
+                } catch (IOException e) {
+                    outPic.print("RESEND_PICTURE\n");
+                    outPic.flush();
+                }
+            }
+
+            socketPicture.close();
+
+            ImageIO.write(bi, "jpg", new File(imagename));
+        } catch (IOException e){
+            System.err.println(e.toString());
         }
-
-        socketPicture.close();
-
-        ImageIO.write(bi, "jpg", new File(imagename));
-
     }
 
     public boolean isConnected() {
@@ -114,6 +161,11 @@ public class Client {
     //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
     public void goForward() throws RobotException, IOException {
+        // DEBUG TO REMOVE
+        System.out.println("---DEBUG -- FWD---");
+        System.out.println(out.toString());
+        System.out.println(in.toString());
+
         out.print("FWD\n");
         out.flush();
         if (!in.readLine().equals("FWD_OK")) {
