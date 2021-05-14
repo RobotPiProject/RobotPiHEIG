@@ -19,8 +19,7 @@ public class Client {
     private boolean isMoving = false;
     public final int PORT = 2025;
     public final int PORTPICTURE = 2026;
-
-
+    
     public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
         try {
             clientSocket = createSocket(ip, PORT);
