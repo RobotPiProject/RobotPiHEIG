@@ -35,5 +35,12 @@ jobs:
           ./toolchain.sh rpi3-armv8-dev --pull --export
           cp x-tools /opt -r
           cd ../../Server
+          # test if openssl folder exist
+          if test -d openssl; then
+          echo "---OUI---"
+          cp -r openssl /opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/
+          else
+          echo "---NON---"
+          fi
           sudo make install_libs
           make
