@@ -4,6 +4,7 @@
 #include <openssl/err.h>
 
 int client_connected = 0;
+SSL *ssl;
 
 void InitializeSSL()
 {
@@ -62,9 +63,8 @@ void configure_context(SSL_CTX *ctx)
     }
 }
 
-void *session_task(void *ptr, void *sslPtr) {
+void *session_task(void *ptr) {
     int client_sockfd = *(int*) ptr;
-    SSL *ssl = *(SSL**) sslPtr;
     char buffer[BUFFER_SIZE];
     char cmd[CMD_LEN];
     char response[CMD_LEN];
@@ -160,7 +160,6 @@ void *session_task(void *ptr, void *sslPtr) {
 }
 
 int server() {
-    SSL *ssl;
     int server_sockfd = 0, client_sockfd = 0;
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
@@ -192,7 +191,7 @@ int server() {
         } else {
             fprintf(stdout, "Connection established\n");
             pthread_t session_t;
-            pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd, (void *) &ssl);
+            pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
             pthread_join(session_t, NULL);
             close(client_sockfd);
             fprintf(stdout, "Bye\n");
