@@ -38,7 +38,7 @@ jobs:
           # test if openssl folder exist
           if test -d openssl; then
           echo "---OUI---"
-          cp -r openssl /opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/
+          sudo cp -r openssl /opt/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/
           else
           echo "---NON---"
           fi
