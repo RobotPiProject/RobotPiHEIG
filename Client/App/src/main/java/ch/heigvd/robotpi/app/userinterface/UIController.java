@@ -7,6 +7,7 @@ package ch.heigvd.robotpi.app.userinterface;
 
 import ch.heigvd.robotpi.app.communication.Client;
 import ch.heigvd.robotpi.app.userinterface.settings.SettingsParams;
+import ch.heigvd.robotpi.servertest.ProtocolCommands;
 import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -50,6 +51,7 @@ public class UIController {
    private Thread workerThread;
    private Client client;
    private ConnectedWorker worker;
+   private ProtocolCommands lastCommand = null;
    /**
     * Boolean to know when a key is pressed
     */
@@ -143,26 +145,50 @@ public class UIController {
                   if (newInstruction) {
                      if (upPressed) {
                         if (leftPressed) {
-                           client.goFrontLeft();
+                           if (lastCommand != ProtocolCommands.frontleft) {
+                              client.goFrontLeft();
+                              lastCommand = ProtocolCommands.frontleft;
+                           }
                         } else if (rightPressed) {
-                           client.goFrontRight();
+                           if (lastCommand!=ProtocolCommands.frontRight) {
+                              client.goFrontRight();
+                              lastCommand = ProtocolCommands.frontRight;
+                           }
                         } else if (!downPressed) {
-                           client.goForward();
+                           if (lastCommand != ProtocolCommands.forward) {
+                              client.goForward();
+                              lastCommand = ProtocolCommands.forward;
+                           }
                         }
                      } else if (downPressed) {
                         if (leftPressed) {
-                           client.goBackwardsLeft();
+                           if (lastCommand != ProtocolCommands.backwardsLeft) {
+                              client.goBackwardsLeft();
+                              lastCommand = ProtocolCommands.backwardsLeft;
+                           }
                         } else if (rightPressed) {
-                           client.goBackwardsRight();
+                           if (lastCommand != ProtocolCommands.backwardsRight) {
+                              client.goBackwardsRight();
+                              lastCommand = ProtocolCommands.backwardsRight;
+                           }
                         } else {
-                           client.goBackward();
+                           if (lastCommand != ProtocolCommands.backward) {
+                              client.goBackward();
+                              lastCommand = ProtocolCommands.backward;
+                           }
                         }
                      } else if (leftPressed) {
                         if (!rightPressed) {
-                           client.goLeft();
+                           if (lastCommand != ProtocolCommands.rotateLeft) {
+                              client.goLeft();
+                              lastCommand = ProtocolCommands.rotateLeft;
+                           }
                         }
                      } else if (rightPressed) {
-                        client.goRight();
+                        if (lastCommand != ProtocolCommands.rotateRight) {
+                           client.goRight();
+                           lastCommand = ProtocolCommands.rotateRight;
+                        }
                      } else {//robot ne bouge pas
                         if (client.isMoving()) { //si le robot n'est pas encore immobilisé
                            client.stop();
@@ -594,6 +620,5 @@ public class UIController {
          }
       }
    }
-
 
 }
