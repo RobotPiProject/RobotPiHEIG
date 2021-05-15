@@ -150,7 +150,7 @@ public class UIController {
                               lastCommand = ProtocolCommands.frontleft;
                            }
                         } else if (rightPressed) {
-                           if (lastCommand!=ProtocolCommands.frontRight) {
+                           if (lastCommand != ProtocolCommands.frontRight) {
                               client.goFrontRight();
                               lastCommand = ProtocolCommands.frontRight;
                            }
