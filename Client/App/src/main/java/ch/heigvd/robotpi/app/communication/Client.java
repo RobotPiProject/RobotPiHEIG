@@ -8,10 +8,9 @@ import java.util.Scanner;
 import javax.net.ssl.*;
 
 public class Client {
-    //private Socket clientSocket;
     private SSLSocket clientSocket = null;
     private static final String[] protocols = new String[] {"TLSv1.3"};
-    private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"}; // TLS_AES_128_GCM_SHA256
+    private static final String[] cipher_suites = new String[] {"TLS_AES_256_GCM_SHA384"}; // TLS_AES_128_GCM_SHA256
     private String ipAddress;
     private PrintWriter out;
     private BufferedReader in;
@@ -31,6 +30,11 @@ public class Client {
             printSocketInfo(clientSocket);
             clientSocket.startHandshake();
 
+        } catch (IOException e){
+            System.err.println(e.toString());
+            throw new CantConnectException();
+        }
+
             isConnected = true;
             out.print("CONN\n");
             out.flush();
@@ -42,17 +46,22 @@ public class Client {
                 clientSocket.close();
                 throw new IncorrectDeviceException();
             }
-        } catch (Exception e){
-            System.err.println(e.toString());
-            throw new CantConnectException();
-        }
+
     }
 
+    /**
+     * Create a new SSL socket with the list of desired protocols
+     * and cipher suites for the connexion.
+     * @param host IP of the robot
+     * @param port Connexion port
+     * @return  Return the socket
+     * @throws IOException
+     */
     private static SSLSocket createSocket(String host, int port) throws IOException {
         SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault()
                 .createSocket(host, port);
         socket.setEnabledProtocols(protocols);
-        socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+        socket.setEnabledCipherSuites(cipher_suites);
 
         // REMOVE
         //for (String c : socket.getSupportedProtocols())
@@ -60,7 +69,10 @@ public class Client {
         return socket;
     }
 
-    // Print SSL data
+    /**
+     * Print SSL socket infos
+     * @param s SSL socket
+     */
     private static void printSocketInfo(SSLSocket s) {
         System.out.println("Socket class: "+s.getClass());
         System.out.println("   Remote address = "
@@ -119,6 +131,7 @@ public class Client {
             ImageIO.write(bi, "jpg", new File(imagename));
         } catch (IOException e){
             System.err.println(e.toString());
+            throw new CantConnectException();
         }
     }
 
