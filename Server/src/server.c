@@ -2,6 +2,7 @@
 #include <protocol.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/bio.h>
 
 int client_connected = 0;
 SSL *ssl;
@@ -15,7 +16,7 @@ void InitializeSSL()
     OpenSSL_add_all_algorithms();
 }
 
-/*
+
 void DestroySSL()
 {
     ERR_free_strings();
@@ -27,7 +28,7 @@ void ShutdownSSL()
     SSL_shutdown(ssl);
     SSL_free(ssl);
 }
-*/
+
 
 SSL_CTX *create_context()
 {
@@ -51,13 +52,12 @@ void configure_context(SSL_CTX *ctx)
     SSL_CTX_set_ecdh_auto(ctx, 1);
 
     /* Set the key and cert */
-    if (SSL_CTX_use_certificate_file(ctx, "./robotpi.pem", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, "src/robotpi.pem", SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
 	exit(EXIT_FAILURE);
     }
 // /etc/pki/tls/private/key.pem
-// home/maude/Documents/PRO/FORK/RobotPiHEIG/Server/src/key.pem
-    if (SSL_CTX_use_PrivateKey_file(ctx, "./key.pem", SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, "src/key.pem", SSL_FILETYPE_PEM) <= 0 ) {
         ERR_print_errors_fp(stderr);
 	exit(EXIT_FAILURE);
     }
@@ -194,7 +194,9 @@ int server() {
             pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
             pthread_join(session_t, NULL);
             close(client_sockfd);
+	    ShutdownSSL();
             fprintf(stdout, "Bye\n");
         }
     }
+    DestroySSL();
 }
