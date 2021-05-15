@@ -605,6 +605,8 @@ public class UIController {
             client.takePicture(photoPath);
             Image image = new Image(new BufferedInputStream(new FileInputStream(photoPath)));
             imageView.setImage(image);
+            imageView.setFitWidth(image.getWidth());
+            imageView.setFitHeight(image.getHeight());
          } catch (InterruptedException e) {
             e.printStackTrace();
          } catch (FileNotFoundException e) {

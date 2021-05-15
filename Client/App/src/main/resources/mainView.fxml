@@ -9,10 +9,10 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
@@ -41,10 +41,11 @@
    <center>
       <SplitPane dividerPositions="0.6768603465851172" minHeight="-Infinity" minWidth="-Infinity" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <items>
-            <Pane minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="200.0">
+            <AnchorPane prefHeight="200.0" prefWidth="200.0">
                <children>
-                  <ImageView fx:id="imageView" fitHeight="654.0" fitWidth="612.0" pickOnBounds="true" preserveRatio="true" />
-               </children></Pane>
+                  <ImageView fx:id="imageView" fitHeight="655.0" fitWidth="610.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="0.20000000000004547" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.39999999999997726" AnchorPane.topAnchor="0.0" />
+               </children>
+            </AnchorPane>
             <SplitPane dividerPositions="0.09961190168175937, 0.6636481241914618" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="600.0" prefWidth="338.0">
                <items>
                   <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="338.0">
