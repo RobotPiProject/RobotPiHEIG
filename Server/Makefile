@@ -103,7 +103,7 @@ install_libsocket:
 
 install_sslLib:
 	cp -r $(LIB_DIR)/openssl_libs/* $(SYSLIBS)
-	cp -r $(SRC_DIR)/openssl $(SYSROOT)/usr/include/
+	cp -r $(SRC_DIR)/openssl $(HEADERS)
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
