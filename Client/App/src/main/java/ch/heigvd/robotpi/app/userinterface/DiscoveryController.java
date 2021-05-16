@@ -19,6 +19,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -51,6 +53,9 @@ public class DiscoveryController {
       primaryStage.setResizable(false);
       primaryStage.setTitle("Robot PI HEIG - Discovery");
       primaryStage.getIcons().add(new Image("image/logo.png"));
+      //Setup skin
+      JMetro jMetro = new JMetro(Style.LIGHT);
+      jMetro.setScene(scene);
    }
 
    @FXML
