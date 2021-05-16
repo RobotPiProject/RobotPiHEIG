@@ -1,9 +1,14 @@
 package ch.heigvd.robotpi.app.communication;
 
 import javax.imageio.ImageIO;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceListener;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class Client {
@@ -243,6 +248,42 @@ public class Client {
         // par ex si robot envoi mauvaise reponse, pb cote robot en general
     }
 
+    //service discovery
+    public class ServiceDiscovery {
 
+        private class SampleListener implements ServiceListener {
+            @Override
+            public void serviceAdded(ServiceEvent event) {
+                System.out.println("Service added: " + event.getInfo());
+            }
 
+            @Override
+            public void serviceRemoved(ServiceEvent event) {
+                System.out.println("Service removed: " + event.getInfo());
+            }
+
+            @Override
+            public void serviceResolved(ServiceEvent event) {
+                System.out.println("Service resolved: " + event.getInfo());
+            }
+        }
+
+        public void launchServiceDiscovery() throws InterruptedException {
+            try {
+                // Create a JmDNS instance
+                JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+                // Add a service listener
+                jmdns.addServiceListener("_http._tcp.local.", new SampleListener());
+
+                // Wait a bit
+                Thread.sleep(30000);
+            } catch (UnknownHostException e) {
+                System.out.println(e.getMessage());
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+    
 }
