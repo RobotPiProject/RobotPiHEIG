@@ -1,5 +1,7 @@
 package ch.heigvd.robotpi.app.communication;
 
+import lombok.Getter;
+
 import javax.imageio.ImageIO;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
@@ -9,6 +11,8 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Client {
    public final int PORT = 2025;
@@ -77,16 +81,20 @@ public class Client {
 
    }
 
-   public void launchServiceDiscovery() throws InterruptedException {
+   public Set<String> launchServiceDiscovery() throws InterruptedException {
       try {
          // Create a JmDNS instance
          JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
+            SampleListener sampleListener = new SampleListener();
          // Add a service listener
-         jmdns.addServiceListener("_http._tcp.local.", new SampleListener());
+         jmdns.addServiceListener("_robopi._tcp", sampleListener);
 
          // Wait a bit
          Thread.sleep(10000);
+
+          return sampleListener.getAddresses();
+
       } catch (UnknownHostException e) {
          System.out.println(e.getMessage());
       } catch (IOException e) {
@@ -264,6 +272,10 @@ public class Client {
 
 
    private class SampleListener implements ServiceListener {
+
+       @Getter private Set<String> addresses =  new HashSet<String>();
+       private final String NAME = "_robopi._tcp";
+
       @Override
       public void serviceAdded(ServiceEvent event) {
          System.out.println("Service added: " + event.getInfo());
@@ -277,7 +289,9 @@ public class Client {
       @Override
       public void serviceResolved(ServiceEvent event) {
          System.out.println("Service resolved: " + event.getInfo());
+         if (event.getName().equals(NAME)) {
+            addresses.add(event.getInfo().getInet4Addresses().toString());
+         }
       }
    }
-
 }
