@@ -6,19 +6,31 @@
 package ch.heigvd.robotpi.app.userinterface;
 
 import ch.heigvd.robotpi.app.communication.Client;
+import ch.heigvd.robotpi.app.userinterface.container.IpAdress;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 public class DiscoveryController {
    private Scene scene;
    private Client client;
 
-   @FXML private TableView<?> TVObjectsDiscovered;
+   @FXML private TableView<IpAdress> TVObjectsDiscovered;
+   @FXML private TableColumn<IpAdress, String> TCIpAdress;
    @FXML private Label LDiscovery;
 
    /**
@@ -41,11 +53,23 @@ public class DiscoveryController {
       primaryStage.setResizable(false);
       primaryStage.setTitle("Robot PI HEIG - Discovery");
       primaryStage.getIcons().add(new Image("image/logo.png"));
+      //Setup skin
+      JMetro jMetro = new JMetro(Style.LIGHT);
+      jMetro.setScene(scene);
    }
 
    @FXML
-   void buttonDiscoveryPressed(ActionEvent event) {
+   public void buttonDiscoveryPressed(ActionEvent event) {
       LDiscovery.setText("Discovering, please wait...");
-      //client découverte
+
+      try {
+         Set<String> addr = client.launchServiceDiscovery();
+         TCIpAdress.setCellValueFactory(new PropertyValueFactory<>("ipAdress"));
+         TVObjectsDiscovered.setItems(IpAdress.getItems(addr));
+         LDiscovery.setText("Found " + addr.size() + " devices active near you.");
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
+
    }
 }

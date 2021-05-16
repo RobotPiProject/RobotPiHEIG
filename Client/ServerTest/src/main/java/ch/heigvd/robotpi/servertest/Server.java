@@ -6,11 +6,11 @@
 package ch.heigvd.robotpi.servertest;
 
 import javax.imageio.ImageIO;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +29,8 @@ public class Server implements Runnable {
    private String serverType;
    private PictureServer pictureServer;
    private boolean stopRequested = false;
+
+   private final String JMDNS_SERVICE_NAME = "_robopi._tcp.local.";
 
    /**
     * Constructor
@@ -57,6 +59,20 @@ public class Server implements Runnable {
       pictureServer = new PictureServer();
       Thread pictureThread = new Thread(pictureServer);
       pictureThread.start();
+
+      try {
+         // Create a JmDNS instance
+         JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+         // Register a service
+         ServiceInfo serviceInfo = ServiceInfo.create(JMDNS_SERVICE_NAME, "bidule", 1234, "path=index.html");
+         jmdns.registerService(serviceInfo);
+         LOG.log(Level.INFO, "Discovery service online, with type {0}",JMDNS_SERVICE_NAME);
+      } catch (UnknownHostException e) {
+         e.printStackTrace();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
    }
 
    public void stopExecution() {
