@@ -46,6 +46,10 @@ public class DiscoveryController {
    @FXML
    void buttonDiscoveryPressed(ActionEvent event) {
       LDiscovery.setText("Discovering, please wait...");
-      //client découverte
+      try {
+         client.launchServiceDiscovery();
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
    }
 }
