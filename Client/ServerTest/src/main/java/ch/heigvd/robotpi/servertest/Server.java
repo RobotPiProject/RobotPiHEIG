@@ -30,6 +30,8 @@ public class Server implements Runnable {
    private PictureServer pictureServer;
    private boolean stopRequested = false;
 
+   private final String JMDNS_SERVICE_NAME = "_robopi._tcp.local.";
+
    /**
     * Constructor
     *
@@ -63,9 +65,9 @@ public class Server implements Runnable {
          JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
          // Register a service
-         ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "example", 1234, "path=index.html");
+         ServiceInfo serviceInfo = ServiceInfo.create(JMDNS_SERVICE_NAME, "bidule", 1234, "path=index.html");
          jmdns.registerService(serviceInfo);
-         LOG.log(Level.INFO, "Discovery service online");
+         LOG.log(Level.INFO, "Discovery service online, with type {0}",JMDNS_SERVICE_NAME);
       } catch (UnknownHostException e) {
          e.printStackTrace();
       } catch (IOException e) {

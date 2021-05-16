@@ -86,20 +86,21 @@ public class Client {
          // Create a JmDNS instance
          JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
-            SampleListener sampleListener = new SampleListener();
+         SampleListener sampleListener = new SampleListener();
          // Add a service listener
-         jmdns.addServiceListener("_robopi._tcp", sampleListener);
+         jmdns.addServiceListener("_robopi._tcp.local.", sampleListener);
 
          // Wait a bit
-         Thread.sleep(10000);
+         Thread.sleep(3000);
 
-          return sampleListener.getAddresses();
+         return sampleListener.getAddresses();
 
       } catch (UnknownHostException e) {
          System.out.println(e.getMessage());
       } catch (IOException e) {
          System.out.println(e.getMessage());
       }
+      return null;
    }
 
    public boolean isConnected() {
@@ -273,8 +274,8 @@ public class Client {
 
    private class SampleListener implements ServiceListener {
 
-       @Getter private Set<String> addresses =  new HashSet<String>();
-       private final String NAME = "_robopi._tcp";
+      private final String NAME = "_robopi._tcp.local.";
+      @Getter private Set<String> addresses = new HashSet<>();
 
       @Override
       public void serviceAdded(ServiceEvent event) {
@@ -289,8 +290,9 @@ public class Client {
       @Override
       public void serviceResolved(ServiceEvent event) {
          System.out.println("Service resolved: " + event.getInfo());
-         if (event.getName().equals(NAME)) {
-            addresses.add(event.getInfo().getInet4Addresses().toString());
+         if (event.getType().equals(NAME)) {
+            InetAddress addr = event.getInfo().getInet4Addresses()[0];
+            addresses.add(addr.getHostAddress());
          }
       }
    }
