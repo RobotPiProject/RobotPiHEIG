@@ -6,11 +6,11 @@
 package ch.heigvd.robotpi.servertest;
 
 import javax.imageio.ImageIO;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +40,19 @@ public class Server implements Runnable {
       this.port = port;
       this.serverType = serverType;
       this.testRun = testRun;
+      try {
+         // Create a JmDNS instance
+         JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+         // Register a service
+         ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "example", 1234, "path=index.html");
+         jmdns.registerService(serviceInfo);
+         LOG.log(Level.INFO, "Discovery service online");
+      } catch (UnknownHostException e) {
+         e.printStackTrace();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
    }
 
    @Override
