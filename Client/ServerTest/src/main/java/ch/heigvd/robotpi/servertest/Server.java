@@ -40,19 +40,6 @@ public class Server implements Runnable {
       this.port = port;
       this.serverType = serverType;
       this.testRun = testRun;
-      try {
-         // Create a JmDNS instance
-         JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-
-         // Register a service
-         ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "example", 1234, "path=index.html");
-         jmdns.registerService(serviceInfo);
-         LOG.log(Level.INFO, "Discovery service online");
-      } catch (UnknownHostException e) {
-         e.printStackTrace();
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
    }
 
    @Override
@@ -70,6 +57,20 @@ public class Server implements Runnable {
       pictureServer = new PictureServer();
       Thread pictureThread = new Thread(pictureServer);
       pictureThread.start();
+
+      try {
+         // Create a JmDNS instance
+         JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+         // Register a service
+         ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "example", 1234, "path=index.html");
+         jmdns.registerService(serviceInfo);
+         LOG.log(Level.INFO, "Discovery service online");
+      } catch (UnknownHostException e) {
+         e.printStackTrace();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
    }
 
    public void stopExecution() {
