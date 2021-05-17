@@ -4,7 +4,7 @@
 <service-group>
   <name replace-wildcards="yes">robopi</name>
   <service>
-    <type>_robopi._tcp.local</type>
+    <type>_robopi._tcp</type>
     <port>2025</port>
   </service>
 </service-group>

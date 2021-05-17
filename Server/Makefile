@@ -128,7 +128,7 @@ deploy_robot_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_ROBOT_APPNAME) $(PI_INSTALL_DIR)/$(TEST_ROBOT_APPNAME)'
 
 deploy_discovery:
-	scp $(DISCOSERVICE) pi@$(PI_ADDR)/home/pi
+	scp $(DISCOSERVICE) pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo mv $(DISCOSERVICE) /etc/avahi/services/$(DISCOSERVICE)'
 
 clean:
