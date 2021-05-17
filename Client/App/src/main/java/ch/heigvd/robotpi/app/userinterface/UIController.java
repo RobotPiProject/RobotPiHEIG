@@ -270,6 +270,12 @@ public class UIController {
 
    @FXML
    private void connectButtonPressed(ActionEvent event) {
+      if (worker.isConnected()) {
+         Util.createAlertFrame(Alert.AlertType.WARNING, "Already Connected", "Already Connected",
+                               "You are already connected to a robot. Please disconnect before attempting to " +
+                               "reconnect.");
+         return;
+      }
       if (TFConnectionAddress.getText().isEmpty()) {
          Util.createAlertFrame(Alert.AlertType.WARNING, "No ip adress", "No ip adress",
                                "Please write the ip adress of the targeted robot before pressing connect.");
@@ -306,6 +312,28 @@ public class UIController {
          Util.createAlertFrame(Alert.AlertType.ERROR, "Not an ip adress", "Not an ip adress",
                                "The adress you provided is not a valid ip adress. Please try again.");
       }
+
+   }
+
+   @FXML
+   private void disconnectButtonPressed(ActionEvent event)  {
+      if (!worker.isConnected()) {
+         Util.createAlertFrame(Alert.AlertType.WARNING, "You are not connected", "You are not connected",
+                               "You are not connected to a robot. Please connect to a device before attempting to " +
+                               "disconnect again.");
+         return;
+      }
+      try{
+         mutex.acquire();
+         client.disconnect();
+      } catch (IOException e) {
+         e.printStackTrace();
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      } finally {
+         mutex.release();
+      }
+      worker.setDisconnected();
 
    }
 
@@ -558,6 +586,11 @@ public class UIController {
          LConnectionStatus.setText("Connected");
       }
 
+      public void setDisconnected() {
+         this.connected = false;
+         LConnectionStatus.setText("Disconnected");
+      }
+
       @Override
       public void run() {
          while (running) {
@@ -575,6 +608,9 @@ public class UIController {
                   Thread.sleep(10000);
                } catch (InterruptedException e) {
                   e.printStackTrace();
+               }
+               if (!connected) {
+                  break;
                }
                try {
                   mutex.acquire();
@@ -622,5 +658,4 @@ public class UIController {
          }
       }
    }
-
 }
