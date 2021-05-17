@@ -40,12 +40,17 @@ DEPS = $(wildcard $(INCLUDE_DIR)/*.h)
 LIBSRCS = $(wildcard $(MOTORLIB_SRCDIR)/*.c)
 LIBOBJS = $(LIBSRCS:.c=.o)
 
+DISCOSERVICE = robopi-server.service
+
 .PHONY: clean
 .PHONY: install
 .PHONY: install_libs
 .PHONY: install_libMotor
 .PHONY: install_bcm2835
+.PHONY: install_libcmocka
+.PHONY: install_libsocket
 .PHONY: deploy
+.PHONY: deploy_discovery
 
 #4)
 all: app
@@ -121,6 +126,10 @@ deploy_robot_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_ROBOT_APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_ROBOT_APPNAME) $(PI_INSTALL_DIR)/$(TEST_ROBOT_APPNAME)'
+
+deploy_discovery:
+	scp $(DISCOSERVICE) pi@$(PI_ADDR)/home/pi
+	ssh pi@$(PI_ADDR) 'sudo mv $(DISCOSERVICE) /etc/avahi/services/$(DISCOSERVICE)'
 
 clean:
 	rm -f $(SRC_DIR)/*.o

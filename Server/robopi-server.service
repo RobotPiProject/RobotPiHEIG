@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone='no'?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+
+<service-group>
+  <name replace-wildcards="yes">robopi</name>
+  <service>
+    <type>_robopi._tcp.local</type>
+    <port>2025</port>
+  </service>
+</service-group>
+
