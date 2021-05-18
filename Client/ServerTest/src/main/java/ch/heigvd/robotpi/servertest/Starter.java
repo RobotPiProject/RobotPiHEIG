@@ -7,7 +7,16 @@ package ch.heigvd.robotpi.servertest;
 
 import java.util.Scanner;
 
+/**
+ * This class launches a Server and allows a user to stop it at any time. This allows the testing of the client app
+ * while monitoring the response of the server
+ */
 public class Starter {
+   /**
+    * The entry point of application.
+    *
+    * @param args the input arguments
+    */
    public static void main(String[] args) {
       Server server = new Server("good", false);
       Thread thread = new Thread(server);

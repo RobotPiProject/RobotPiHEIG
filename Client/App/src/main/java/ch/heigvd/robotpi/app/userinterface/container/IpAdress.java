@@ -5,7 +5,6 @@
  */
 package ch.heigvd.robotpi.app.userinterface.container;
 
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;

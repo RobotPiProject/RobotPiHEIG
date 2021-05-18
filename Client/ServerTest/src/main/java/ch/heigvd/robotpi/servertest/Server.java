@@ -1,6 +1,6 @@
 /*
  * @File Server.java
- * @Authors : David González León
+ * @Authors : Maude Issolah, David González León
  * @Date 11 mai 2021
  */
 package ch.heigvd.robotpi.servertest;
@@ -15,31 +15,36 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class implements a single-threaded TCP server.
+ * This class implements a single-threaded tcp server used to simulate a robopi. It can be used both for testing
+ * purpose and as a separate application. If used for testing purposes, it can be used to represent a correctly
+ * working server or a malfunctioning server
  */
 public class Server implements Runnable {
 
    final static Logger LOG = Logger.getLogger(Server.class.getName());
    private final boolean testRun;
+   private final String JMDNS_SERVICE_NAME = "_robopi._tcp.local.";
+   private final int PORT = 2025;
+   private final String serverType;
    private ServerSocket serverSocket;
    private Socket clientSocket = null;
    private BufferedReader in = null;
    private PrintWriter out = null;
-   private int port;
-   private String serverType;
    private PictureServer pictureServer;
    private boolean stopRequested = false;
 
-   private final String JMDNS_SERVICE_NAME = "_robopi._tcp.local.";
-
    /**
-    * Constructor
+    * Creates a new Server, that will behave according to the given parameters.
     *
-    * @param port    the port to listen on
-    * @param testRun
+    * @param serverType the server type the type of the server : can be either "good" or "bad". If any other input is
+    *                   given an exception will be thrown
+    * @param testRun    the test run indicates if the current instance will be used for testing or not. This will
+    *                   change the behaviour of some of the answers to specific commands.
     */
    public Server(String serverType, boolean testRun) {
       if (!serverType.equals("good") && !serverType.equals("bad")) {
+         throw new IllegalArgumentException();
+      }
       this.serverType = serverType;
       this.testRun = testRun;
    }
@@ -53,9 +58,14 @@ public class Server implements Runnable {
       }
    }
 
+   /**
+    * Starts the different parts of the server.
+    *
+    * @throws IOException the io exception
+    */
    public void start() throws IOException {
       LOG.log(Level.INFO, "Start {0} server ...", serverType);
-      serverSocket = new ServerSocket(port);
+      serverSocket = new ServerSocket(PORT);
       pictureServer = new PictureServer();
       Thread pictureThread = new Thread(pictureServer);
       pictureThread.start();
@@ -65,9 +75,10 @@ public class Server implements Runnable {
          JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
          // Register a service
-         ServiceInfo serviceInfo = ServiceInfo.create(JMDNS_SERVICE_NAME, "bidule", 1234, "path=index.html");
+         ServiceInfo serviceInfo =
+                 ServiceInfo.create(JMDNS_SERVICE_NAME, "testingServer", 1234, "Testing server for the robot pi app");
          jmdns.registerService(serviceInfo);
-         LOG.log(Level.INFO, "Discovery service online, with type {0}",JMDNS_SERVICE_NAME);
+         LOG.log(Level.INFO, "Discovery service online, with type {0}", JMDNS_SERVICE_NAME);
       } catch (UnknownHostException e) {
          e.printStackTrace();
       } catch (IOException e) {
@@ -75,21 +86,25 @@ public class Server implements Runnable {
       }
    }
 
+   /**
+    * Stops the execution of the server. The server will close soon after this function is called
+    */
    public void stopExecution() {
       stopRequested = true;
       stop();
    }
 
    /**
-    * This method initiates the process.
+    * This method initiates the main process of the server
+    *
+    * @throws IOException the io exception
     */
    public void serveClients() throws IOException {
-
       while (!stopRequested) {
-         LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", port);
+         LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
          try {
             clientSocket = serverSocket.accept();
-         } catch (SocketException e){
+         } catch (SocketException e) {
             return;
          }
          in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -220,6 +235,9 @@ public class Server implements Runnable {
       }
    }
 
+   /**
+    * Stop the different process run by the server
+    */
    private void stop() {
       try {
          LOG.log(Level.INFO, "Stop {0} server ...", serverType);
@@ -248,6 +266,11 @@ public class Server implements Runnable {
       private BufferedOutputStream imageOut = null;
       private boolean running = true;
 
+      /**
+       * Stops the picture server
+       *
+       * @throws IOException the io exception
+       */
       public void stop() throws IOException {
          LOG.log(Level.INFO, "Stop picture server ...");
          if (clientSocket != null) {
@@ -269,22 +292,27 @@ public class Server implements Runnable {
          }
       }
 
+      /**
+       * Starts the different parts of the server
+       *
+       * @throws IOException the io exception
+       */
       private void start() throws IOException {
          LOG.log(Level.INFO, "Start picture server ...");
          serverSocket = new ServerSocket(PORT);
       }
 
       /**
-       * Sends a picture to the connecting client. The picture is always the same
+       * Sends a picture to the connecting client. The picture is always the same.
        *
-       * @throws IOException
+       * @throws IOException the io exception
        */
       private void listen() throws IOException {
          while (true) {
             LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
             try {
                clientSocket = serverSocket.accept();
-            } catch (SocketException e){
+            } catch (SocketException e) {
 
             }
             if (!running) {
