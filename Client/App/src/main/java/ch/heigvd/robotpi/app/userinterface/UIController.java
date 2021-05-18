@@ -123,10 +123,13 @@ public class UIController {
     * @param primaryStage the primary stage
     */
    public void load(Stage primaryStage) {
+      //Create client and threading
       client = new Client();
       worker = new ConnectedWorker();
       workerThread = new Thread(worker);
       workerThread.start();
+
+      //Set scene and add set settings/logo...
       primaryStage.setScene(scene);
       primaryStage.showingProperty().addListener(((observableValue, oldValue, showing) -> {
          if (showing) {
@@ -136,6 +139,7 @@ public class UIController {
       }));
       primaryStage.setTitle("Robot PI HEIG");
       primaryStage.getIcons().add(new Image("image/logo.png"));
+
       //handles key/button pressing
       AnimationTimer timer = new AnimationTimer() {
          @Override
@@ -213,7 +217,7 @@ public class UIController {
                }
             } else {
                if (justDisconnected) {
-                  LConnectionStatus.setText("Disconnected");
+                  worker.setDisconnected();
                   justDisconnected = false;
                }
             }
@@ -253,7 +257,7 @@ public class UIController {
    }
 
    /**
-    * Press on close.
+    * Action when the user selects the closing option in the menu. Closes the ui
     *
     * @param event the event
     */
@@ -263,7 +267,8 @@ public class UIController {
    }
 
    /**
-    * Open about page.
+    * Action when the user selects the about option in the menu. Opens the about page of this project, in our case
+    * the github page.
     *
     * @param event the event
     */
@@ -281,7 +286,9 @@ public class UIController {
    }
 
    /**
-    * Connect button pressed.
+    * Action when the user presses the connect button on the ui or the option menu. Starts the connection procedure.
+    * Can create different error messages if the user input is incorrect, or if there are no devices that correspond
+    * to the given input
     *
     * @param event the event
     */
@@ -314,6 +321,7 @@ public class UIController {
             Util.createAlertFrame(Alert.AlertType.ERROR, "Error with the robot", "Error with the robot",
                                   "The robot had an issue while connecting to the client. Please restart the robot " +
                                   "then try again");
+            worker.setDisconnected();
          } catch (IOException | Client.IncorrectDeviceException e) {
             Util.createAlertFrame(Alert.AlertType.ERROR, "Wrong ip adress", "Wrong ip adress",
                                   "The ip adress you wrote does not coincide with that of a robot. Please check the " +
@@ -330,7 +338,8 @@ public class UIController {
    }
 
    /**
-    * Disconnect button pressed.
+    * Action when the user selects the disconnect option in the menu. Disconnects the client from the robot, unless
+    * there was no connection.
     *
     * @param event the event
     */
@@ -357,7 +366,9 @@ public class UIController {
    }
 
    /**
-    * Open discover window.
+    * Action when the user presses the connect button on the ui or the option menu. Launches a new window controlled
+    * by the DiscoveryController class. The current window will wait for the new window to close before allowing
+    * further interactions
     *
     * @param event the event
     */
@@ -381,7 +392,8 @@ public class UIController {
    }
 
    /**
-    * Camera button pressed.
+    * Action when the user presses the camera button on the ui. If it is connected to a robopi device, it will ask
+    * for a photo to be taken by the device, and store the received image next to the .jar file.
     *
     * @param event the event
     */
@@ -395,8 +407,8 @@ public class UIController {
             }
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
             LocalDateTime now = LocalDateTime.now();
-            PictureWorker pictureWorker = new PictureWorker(
-                    figuresDir.getPath() + "/" + currentIpAddress + "_" + dtf.format(now));
+            PictureWorker pictureWorker =
+                    new PictureWorker(figuresDir.getPath() + "/" + currentIpAddress + "_" + dtf.format(now));
             Thread pictureThread = new Thread(pictureWorker);
             pictureThread.start();
          } catch (IOException e) {
@@ -406,7 +418,7 @@ public class UIController {
    }
 
    /**
-    * Sets buttons.
+    * Sets up the different buttons to enable the control of the robot through the UI
     */
    private void setupButtons() {
       BBackwards.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
@@ -529,7 +541,7 @@ public class UIController {
    }
 
    /**
-    * Sets keys.
+    * Sets up a reaction for specific keys to enable the control of the robot through them
     */
    private void setupKeys() {
       scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
@@ -547,7 +559,7 @@ public class UIController {
                upPressed = true;
                break;
             default:
-               break;
+               return;
          }
          newInstruction = true;
       });
@@ -566,7 +578,7 @@ public class UIController {
                upPressed = false;
                break;
             default:
-               break;
+               return;
          }
          newInstruction = true;
       });
@@ -596,7 +608,7 @@ public class UIController {
       private boolean running = true;
 
       /**
-       * SSignals to the worker that the UI is being closed, and that it needs to stop running
+       * Signals to the worker that the UI is being closed, and that it needs to stop running
        */
       public void signalShutdown() {
          this.running = false;
@@ -622,7 +634,7 @@ public class UIController {
       }
 
       /**
-       * Sets disconnected.
+       * Informs the worker that will he was waiting the connection was lost
        */
       public void setDisconnected() {
          this.connected = false;
@@ -632,6 +644,7 @@ public class UIController {
       @Override
       public void run() {
          while (running) {
+            //Wait until a connection is established
             if (!connected) {
                synchronized (this) {
                   try {
@@ -641,6 +654,7 @@ public class UIController {
                   }
                }
             }
+            //While connected, send ping every 10 sec to ensure the connection is still alive
             while (connected) {
                try {
                   Thread.sleep(10000);
@@ -656,7 +670,7 @@ public class UIController {
                } catch (InterruptedException e) {
                   e.printStackTrace();
                } catch (Client.LostConnectionException | IOException e) {
-                  connected = false;
+                  setDisconnected();
                } finally {
                   mutex.release();
                }
@@ -667,7 +681,7 @@ public class UIController {
    }
 
    /**
-    * The type Picture worker.
+    * A worker that handles the picture process
     */
    class PictureWorker implements Runnable {
       private final String photoPath;
@@ -679,7 +693,6 @@ public class UIController {
        */
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
 
-      //TODO handle exceptions
       @Override
       public void run() {
          try {
@@ -691,14 +704,19 @@ public class UIController {
             imageView.setFitHeight(image.getHeight());
          } catch (InterruptedException e) {
             e.printStackTrace();
-         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-         } catch (Client.CantConnectException e) {
-            e.printStackTrace();
          } catch (IOException e) {
             e.printStackTrace();
-         } catch (Client.RobotException e) {
-            e.printStackTrace();
+         } catch (Client.CantConnectException e) {
+            Util.createAlertFrame(Alert.AlertType.ERROR, "Connection lost", "Connection lost",
+                                  "The robot had an issue while connecting to the client. Please restart the robot " +
+                                  "then try again");
+            worker.setDisconnected();
+         }
+         catch (Client.RobotException e) {
+            Util.createAlertFrame(Alert.AlertType.ERROR, "The robot had an error while taking the picture",
+                                  "The robot had an error while taking the picture",
+                                  "There was an issue with the robot while taking a picture. Please check that the " +
+                                  "robot is fine then try again.");
          } finally {
             mutexPicture.release();
          }

@@ -8,6 +8,9 @@ package ch.heigvd.robotpi.app.userinterface;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Region;
 
+/**
+ * A class that contains general utility functions for the ui
+ */
 public final class Util {
    /**
     * Creates an alert with the specified alertType, title, header and content. The new window will just wait until it
@@ -26,6 +29,4 @@ public final class Util {
       alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
       alert.showAndWait();
    }
-
-
 }
