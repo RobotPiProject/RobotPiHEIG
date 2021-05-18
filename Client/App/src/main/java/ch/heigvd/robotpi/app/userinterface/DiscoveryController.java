@@ -7,9 +7,6 @@ package ch.heigvd.robotpi.app.userinterface;
 
 import ch.heigvd.robotpi.app.communication.Client;
 import ch.heigvd.robotpi.app.userinterface.container.IpAdress;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -22,9 +19,11 @@ import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
-import java.util.ArrayList;
 import java.util.Set;
 
+/**
+ * This class allows to control the discovery ui. It is linked to the discoveryView.fxml.
+ */
 public class DiscoveryController {
    private Scene scene;
    private Client client;
@@ -36,7 +35,8 @@ public class DiscoveryController {
    /**
     * Sets the scene linked to this controller and sets up all of it's components
     *
-    * @param scene the scene
+    * @param scene  the scene
+    * @param client the client
     */
    public void setScene(Scene scene, Client client) {
       this.scene = scene;
@@ -58,6 +58,11 @@ public class DiscoveryController {
       jMetro.setScene(scene);
    }
 
+   /**
+    * Function executed when the dicovery button is pressed on the ui.
+    *
+    * @param event the event
+    */
    @FXML
    public void buttonDiscoveryPressed(ActionEvent event) {
       LDiscovery.setText("Discovering, please wait...");

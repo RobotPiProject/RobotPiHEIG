@@ -37,7 +37,7 @@ import java.util.Properties;
 import java.util.concurrent.Semaphore;
 
 /**
- * The controller of the main window of the client's app
+ * The controller of the main window of the client's app. It is linked to the mainView.fxml file.
  */
 public class UIController {
    //Image Width
@@ -46,12 +46,13 @@ public class UIController {
    private final Semaphore mutexPicture = new Semaphore(1);
    //Settings
    private Properties settings;
-   private Scene scene;
    private String currentIpAddress;
+   //Scene
+   private Scene scene;
+   //Threading and client
    private Thread workerThread;
    private Client client;
    private ConnectedWorker worker;
-   private ProtocolCommands lastCommand = null;
    /**
     * Boolean to know when a key is pressed
     */
@@ -62,7 +63,9 @@ public class UIController {
 
    private boolean newInstruction = false;
    private boolean justDisconnected = false;
+   private ProtocolCommands lastCommand = null;
 
+   //FXML instances
    @FXML private Button BFrontLeft;
    @FXML private Button BFront;
    @FXML private Button BFrontRight;
@@ -72,7 +75,6 @@ public class UIController {
    @FXML private Button BBackwards;
    @FXML private Button BBackwardsRight;
    @FXML private Button BCamera;
-
 
    @FXML private Label LConnectionStatus;
    @FXML private TextField TFConnectionAddress;
@@ -134,7 +136,7 @@ public class UIController {
       }));
       primaryStage.setTitle("Robot PI HEIG");
       primaryStage.getIcons().add(new Image("image/logo.png"));
-      //handles key pressing
+      //handles key/button pressing
       AnimationTimer timer = new AnimationTimer() {
          @Override
          public void handle(long l) {
@@ -222,7 +224,7 @@ public class UIController {
    }
 
    /**
-    * Closes the ui
+    * Closes the ui and all the active threads
     */
    public void close() {
       settings.setProperty(SettingsParams.IP_ADDRESS.getParamName(), currentIpAddress);
@@ -250,11 +252,21 @@ public class UIController {
 
    }
 
+   /**
+    * Press on close.
+    *
+    * @param event the event
+    */
    @FXML
    private void pressOnClose(ActionEvent event) {
       ((Stage) LConnectionStatus.getScene().getWindow()).close();
    }
 
+   /**
+    * Open about page.
+    *
+    * @param event the event
+    */
    @FXML
    private void openAboutPage(ActionEvent event) {
       try {
@@ -268,6 +280,11 @@ public class UIController {
       }
    }
 
+   /**
+    * Connect button pressed.
+    *
+    * @param event the event
+    */
    @FXML
    private void connectButtonPressed(ActionEvent event) {
       if (worker.isConnected()) {
@@ -294,17 +311,14 @@ public class UIController {
                worker.notify();
             }
          } catch (Client.CantConnectException e) {
-            e.printStackTrace();
             Util.createAlertFrame(Alert.AlertType.ERROR, "Error with the robot", "Error with the robot",
                                   "The robot had an issue while connecting to the client. Please restart the robot " +
                                   "then try again");
          } catch (IOException | Client.IncorrectDeviceException e) {
-            e.printStackTrace();
             Util.createAlertFrame(Alert.AlertType.ERROR, "Wrong ip adress", "Wrong ip adress",
                                   "The ip adress you wrote does not coincide with that of a robot. Please check the " +
                                   "ip adress of the robot and try again.");
          } catch (InterruptedException e) {
-            e.printStackTrace();
          } finally {
             mutex.release();
          }
@@ -315,15 +329,20 @@ public class UIController {
 
    }
 
+   /**
+    * Disconnect button pressed.
+    *
+    * @param event the event
+    */
    @FXML
-   private void disconnectButtonPressed(ActionEvent event)  {
+   private void disconnectButtonPressed(ActionEvent event) {
       if (!worker.isConnected()) {
          Util.createAlertFrame(Alert.AlertType.WARNING, "You are not connected", "You are not connected",
                                "You are not connected to a robot. Please connect to a device before attempting to " +
                                "disconnect again.");
          return;
       }
-      try{
+      try {
          mutex.acquire();
          client.disconnect();
       } catch (IOException e) {
@@ -337,6 +356,11 @@ public class UIController {
 
    }
 
+   /**
+    * Open discover window.
+    *
+    * @param event the event
+    */
    @FXML
    private void openDiscoverWindow(ActionEvent event) {
       try {
@@ -356,6 +380,11 @@ public class UIController {
       }
    }
 
+   /**
+    * Camera button pressed.
+    *
+    * @param event the event
+    */
    @FXML
    private void cameraButtonPressed(ActionEvent event) {
       if (worker.isConnected()) {
@@ -366,8 +395,8 @@ public class UIController {
             }
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
             LocalDateTime now = LocalDateTime.now();
-            PictureWorker pictureWorker =
-                    new PictureWorker(figuresDir.getPath() + "/" + currentIpAddress + "_" + dtf.format(now));
+            PictureWorker pictureWorker = new PictureWorker(
+                    figuresDir.getPath() + "/" + currentIpAddress + "_" + dtf.format(now));
             Thread pictureThread = new Thread(pictureWorker);
             pictureThread.start();
          } catch (IOException e) {
@@ -376,6 +405,9 @@ public class UIController {
       }
    }
 
+   /**
+    * Sets buttons.
+    */
    private void setupButtons() {
       BBackwards.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
@@ -496,6 +528,9 @@ public class UIController {
       addImageToButton(BCamera, "image/Camera.png");
    }
 
+   /**
+    * Sets keys.
+    */
    private void setupKeys() {
       scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
          switch (keyEvent.getCode()) {
@@ -586,6 +621,9 @@ public class UIController {
          LConnectionStatus.setText("Connected");
       }
 
+      /**
+       * Sets disconnected.
+       */
       public void setDisconnected() {
          this.connected = false;
          LConnectionStatus.setText("Disconnected");
@@ -628,9 +666,17 @@ public class UIController {
       }
    }
 
+   /**
+    * The type Picture worker.
+    */
    class PictureWorker implements Runnable {
       private final String photoPath;
 
+      /**
+       * Instantiates a new Picture worker.
+       *
+       * @param photoPath the photo path
+       */
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
 
       //TODO handle exceptions
