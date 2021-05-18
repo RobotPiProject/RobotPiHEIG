@@ -28,7 +28,10 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -711,8 +714,7 @@ public class UIController {
                                   "The robot had an issue while connecting to the client. Please restart the robot " +
                                   "then try again");
             worker.setDisconnected();
-         }
-         catch (Client.RobotException e) {
+         } catch (Client.RobotException e) {
             Util.createAlertFrame(Alert.AlertType.ERROR, "The robot had an error while taking the picture",
                                   "The robot had an error while taking the picture",
                                   "There was an issue with the robot while taking a picture. Please check that the " +
