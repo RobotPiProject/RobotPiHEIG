@@ -10,9 +10,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * The un-official launching class of the client application. This class extends the Application class from the
+ * javafx package, and allows the launching of the main ui of the client applications
+ */
 public class Launcher extends Application {
    private UIController controller;
 
+   /**
+    * The entry point of application.
+    *
+    * @param args the input arguments
+    */
    public static void main(String[] args) {
       launch();
    }

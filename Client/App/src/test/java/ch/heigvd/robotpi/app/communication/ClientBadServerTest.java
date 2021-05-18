@@ -1,16 +1,12 @@
 package ch.heigvd.robotpi.app.communication;
 
 import ch.heigvd.robotpi.servertest.Server;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,7 +19,7 @@ class ClientBadServerTest {
 
    @BeforeAll
    static void beforeAll() {
-      Thread srvThread = new Thread(new Server(2025, "bad", true));
+      Thread srvThread = new Thread(new Server("bad", true));
       srvThread.start();
       try {
          // To be sure that the server is running (tests on github)
