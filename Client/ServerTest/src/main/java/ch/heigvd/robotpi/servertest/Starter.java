@@ -9,14 +9,14 @@ import java.util.Scanner;
 
 public class Starter {
    public static void main(String[] args) {
-      Server server = new Server(2025, "good", false);
+      Server server = new Server("good", false);
       Thread thread = new Thread(server);
       thread.start();
       System.out.println("Enter \"stop\" to stop the server from this terminal");
       Scanner scanner = new Scanner(System.in);
       while (true) {
          String response = scanner.nextLine();
-         if (response.equals("stop")){
+         if (response.equals("stop")) {
             System.out.println("Stopping execution of the server");
             server.stopExecution();
             try {

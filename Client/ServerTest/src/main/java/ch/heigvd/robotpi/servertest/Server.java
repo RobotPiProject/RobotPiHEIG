@@ -38,8 +38,8 @@ public class Server implements Runnable {
     * @param port    the port to listen on
     * @param testRun
     */
-   public Server(int port, String serverType, boolean testRun) {
-      this.port = port;
+   public Server(String serverType, boolean testRun) {
+      if (!serverType.equals("good") && !serverType.equals("bad")) {
       this.serverType = serverType;
       this.testRun = testRun;
    }
