@@ -1,5 +1,6 @@
 #include <server.h>
 #include <protocol.h>
+#include <motor.h>
 
 int client_connected = 0;
 
@@ -140,6 +141,12 @@ int server() {
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
         fprintf(stderr, "[server] Could not create server socket\n");
+        return EXIT_FAILURE;
+    }
+
+    if(motorInit())
+    {
+        fprintf(stderr, "[server] Unable to initialise motors\n");
         return EXIT_FAILURE;
     }
 
