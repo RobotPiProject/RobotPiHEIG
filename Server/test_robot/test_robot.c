@@ -89,7 +89,7 @@ void test_motor(void)
 
 void test_camera(void)
 {
-   camSnap("./", "test");
+   printf("function camSnap returned code %d\n", camSnap("./", "test"));
 }
 
 
