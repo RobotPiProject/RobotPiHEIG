@@ -15,13 +15,13 @@ void setCamSettings(CamSettings newSettings)
    settings = newSettings;
 }
 
-int camSnap(const char *name, const char *path)
+int camSnap(const char *path, const char *name)
 {
    char command[256] = "fswebcam";
 
    //Set resolution
    char tmp[128];
-   sprintf(tmp, " -r %4ux%-4u", settings.imageWidth, settings.imageHeight);
+   sprintf(tmp, " -r %ux%u", settings.imageWidth, settings.imageHeight);
    strcat(command, tmp);
 
    //Set banner
@@ -49,6 +49,7 @@ int camSnap(const char *name, const char *path)
    }
    sprintf(tmp, ".%s", format);
    strcat(command, tmp);
+   printf("Trying to take picture with command: %s\n", command);
 
    return system(command);
 }
