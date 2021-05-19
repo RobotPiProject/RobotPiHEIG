@@ -119,8 +119,8 @@ void process_cmd(char *cmd, char *response) {
  */
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
-    //char *fname = camSnap("/home/pic/capture", "pic");
-    char *fname = "/home/pi/small.jpg";
+    camSnap("/home/pi", "pic");
+    char *fname = "/home/pi/pic.jpg";
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
