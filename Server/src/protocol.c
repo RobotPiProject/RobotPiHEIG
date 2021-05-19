@@ -119,8 +119,6 @@ void process_cmd(char *cmd, char *response) {
  */
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
-    camSnap("/home/pi", "pic");
-    char *fname = "/home/pi/pic.jpg";
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
@@ -162,6 +160,8 @@ void *img_task(void *ptr) {
             }
         }
         /* start sending image */
+        camSnap("/home/pi", "pic");
+        char *fname = "/home/pi/pic.jpg";
         FILE *file_handle = fopen(fname, "r");
         send_picture(img_client_sockfd, file_handle, buffer);
         explicit_bzero(cmd, CMD_LEN);
