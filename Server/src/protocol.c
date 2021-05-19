@@ -1,5 +1,6 @@
 #include <protocol.h>
 #include <motor.h>
+#include <camera.h>
 
 extern int client_connected;
 
@@ -116,7 +117,7 @@ int process_cmd(char *cmd, char *response) {
 
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
-    char *fname = "/home/pi/robot.jpg";
+    char *fname = camSnap("/home/pic/capture", "pic");
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
