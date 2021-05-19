@@ -31,7 +31,7 @@
 #define LISTENING_IMG_PORT "2026"
 
 void put_response(char *response, int response_code);
-int process_cmd(char *cmd, char *response);
+void process_cmd(char *cmd, char *response);
 void *img_task(void *ptr);
 unsigned int send_picture(int sockfd, FILE *fp, char *buffer);
 
