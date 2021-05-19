@@ -141,19 +141,19 @@ void *img_task(void *ptr) {
         if (strncmp(cmd, "PICTURE", CMD_LEN) != 0) {
             fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
             put_response(response, PICTURE_ERR);
-            int res_len = prepare_response(response);
+            unsigned int res_len = prepare_response(response);
             send_msg("[pic] ", img_client_sockfd, response, res_len);
             shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
             continue;
         } else {
             if (client_connected == 1) {
                 put_response(response, PICTURE_OK);
-                response[strlen(response)] = '\n';
+                unsigned int res_len = prepare_response(response);
                 fprintf(stdout, "Sending message: %s\n", response);
-                send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+                send_msg("[pic] ", img_client_sockfd, response, res_len);
             } else {
                 put_response(response, PICTURE_ERR);
-                int res_len = prepare_response(response);
+                unsigned int res_len = prepare_response(response);
                 send_msg("[pic] ", img_client_sockfd, response, res_len);
                 shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
