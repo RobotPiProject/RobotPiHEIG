@@ -120,7 +120,7 @@ void process_cmd(char *cmd, char *response) {
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
     //char *fname = camSnap("/home/pic/capture", "pic");
-    char *fname = "aaa";
+    char *fname = "/home/pi/small.jpg";
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
@@ -143,8 +143,8 @@ void *img_task(void *ptr) {
         if (strncmp(cmd, "PICTURE", CMD_LEN) != 0) {
             fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
             put_response(response, PICTURE_ERR);
-            response[strlen(response)] = '\n';
-            send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+            int res_len = prepare_response(response);
+            send_msg("[pic] ", img_client_sockfd, response, res_len);
             shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
             continue;
         } else {
@@ -155,8 +155,8 @@ void *img_task(void *ptr) {
                 send_msg("[pic] ", img_client_sockfd, response, strlen(response));
             } else {
                 put_response(response, PICTURE_ERR);
-                response[strlen(response)] ='\n';
-                send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+                int res_len = prepare_response(response);
+                send_msg("[pic] ", img_client_sockfd, response, res_len);
                 shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
             }
