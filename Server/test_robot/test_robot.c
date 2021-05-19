@@ -10,13 +10,16 @@
  */
 
 #include "../include/motor.h"
+#include "../include/camera.h"
 #include <unistd.h>
 
 void test_motor(void);
+void test_camera(void);
 
 int main(int argc, char const *argv[])
 {
-   test_motor();
+   //test_motor();
+   test_camera();
    return 0;
 }
 
@@ -82,6 +85,11 @@ void test_motor(void)
 
       motorQuit();
    }
+}
+
+void test_camera(void)
+{
+   camSnap("./", "test");
 }
 
 
