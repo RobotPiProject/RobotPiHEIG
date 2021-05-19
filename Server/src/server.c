@@ -4,6 +4,13 @@
 
 int client_connected = 0;
 
+unsigned int prepare_response(char *response) {
+    unsigned int res_len = strlen(response);
+    response[res_len] = '\n';
+    res_len++;
+    return res_len;
+}
+
 unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t buffer_size) {
     unsigned int bytes_read;
     int cmd_end = 0;
@@ -68,7 +75,6 @@ void *session_task(void *sockfd) {
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-    unsigned int res_len;
     while (1) {
         unsigned int total_bytes = read_msg("[server] ", client_sockfd, buffer, cmd, BUFFER_SIZE);
         fprintf(stdout, "[server] Command received: %s", cmd);
@@ -76,23 +82,27 @@ void *session_task(void *sockfd) {
             fprintf(stdout, " 0x%X", cmd[i]);
         }
         fprintf(stdout, "\n");
-
+        int should_quit = 0;
         /* We don't accept commands if there is no application-level connection */
         if (!client_connected) {
             if (!strncmp(cmd, "DISCONN", CMD_LEN)) {
                 put_response(response, DISCONN_ERR);
             } else if (strncmp(cmd, "CONN", CMD_LEN) != 0) {
                 put_response(response, CMD_ERR);
+                should_quit = 1;
             } else {
                 client_connected = 1;
                 put_response(response, CONN_OK);
             }
         } else {
             if (!strncmp(cmd, "CONN", CMD_LEN)) {
+                fprintf(stderr, "[server] There is another client already connected\n");
                 put_response(response, CONN_ERR);
+                should_quit = 1;
             } else if (!strncmp(cmd, "DISCONN", CMD_LEN)) {
                 client_connected = 0;
                 put_response(response, DISCONN_OK);
+                should_quit = 1;
             } else {
                 /* Only then can we process the command */
                 process_cmd(cmd, response);
@@ -101,17 +111,20 @@ void *session_task(void *sockfd) {
         fprintf(stdout, "[server] Sending message: %s\n", response);
 
         // append new line character
-        res_len = strlen(response);
-        response[res_len] = '\n';
-        res_len++;
+        unsigned int res_len = prepare_response(response);
         send_msg("[server] ", client_sockfd, response, res_len);
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
+        if (should_quit == 1) {
+            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+            pthread_exit(NULL);
+        }
     }
+    close(client_sockfd);
 }
 
 int server() {
-    int server_sockfd = 0, client_sockfd = 0, img_server_sockfd = 0;
+    int server_sockfd = 0;
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
         fprintf(stderr, "[server] Could not create server socket\n");
@@ -125,19 +138,19 @@ int server() {
     }
 
     while (1) {
+        int client_sockfd = 0;
+        int img_server_sockfd = 0;
         fprintf(stdout, "[server] Waiting for clients...\n");
         client_sockfd = accept_inet_stream_socket(server_sockfd, 0, 0, 0, 0, 0, 0);
         if (client_sockfd < 0) {
-            fprintf(stderr, "[server] Error on accept");
-            return EXIT_FAILURE;
+            fprintf(stderr, "[server] Error on accept\n");
+        } else {
+            fprintf(stdout, "[server] Connection established\n");
+            pthread_t session_t;
+            pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
+            pthread_t img_t;
+            pthread_create(&img_t, NULL, img_task, (void *) &img_server_sockfd);
+            fprintf(stdout, "[server] Bye\n");
         }
-        fprintf(stdout, "[server] Connection established\n");
-        pthread_t session_t;
-        pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
-        pthread_t img_t;
-        pthread_create(&img_t, NULL, img_task, (void *) &img_server_sockfd);
-        pthread_join(session_t, NULL);
-        close(client_sockfd);
-        fprintf(stdout, "[server] Bye\n");
     }
 }

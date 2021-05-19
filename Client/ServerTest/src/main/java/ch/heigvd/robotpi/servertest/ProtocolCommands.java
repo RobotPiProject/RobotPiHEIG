@@ -1,12 +1,15 @@
 /*
  * @File ProtocolCommands.java
- * @Authors : David González León
+ * @Authors : David González León, Jade Gröli
  * @Date 12 mai 2021
  */
 package ch.heigvd.robotpi.servertest;
 
 import lombok.Getter;
 
+/**
+ * The enum that contains all commands used in the communication protocol.
+ */
 public enum ProtocolCommands {
    conn("CONN", "CONN_OK"), forward("FWD", "FWD_OK"), backward("BKWD", "BKWD_OK"),
    rotateLeft("ROTATE_LEFT", "ROTATE_LEFT_OK"), rotateRight("ROTATE_RIGHT", "ROTATE_RIGHT_OK"),
@@ -16,11 +19,24 @@ public enum ProtocolCommands {
 
    @Getter private final String message, messageConfirmation;
 
+   /**
+    * Instantiates a new Protocol commands.
+    *
+    * @param message             the message
+    * @param messageConfirmation the message confirmation
+    */
    ProtocolCommands(String message, String messageConfirmation) {
       this.message = message;
       this.messageConfirmation = messageConfirmation;
    }
 
+   /**
+    * Gets the correct command based on the received message
+    *
+    * @param message the message
+    *
+    * @return the command from message
+    */
    public static ProtocolCommands getCommandFromMessage(String message) {
       if (message.equals(conn.getMessage())) {
          return conn;

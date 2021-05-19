@@ -7,9 +7,11 @@ package ch.heigvd.robotpi.app.userinterface;
 
 import ch.heigvd.robotpi.app.communication.Client;
 import ch.heigvd.robotpi.app.userinterface.settings.SettingsParams;
+import ch.heigvd.robotpi.servertest.ProtocolCommands;
 import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -20,12 +22,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -34,7 +40,7 @@ import java.util.Properties;
 import java.util.concurrent.Semaphore;
 
 /**
- * The controller of the main window of the client's app
+ * The controller of the main window of the client's app. It is linked to the mainView.fxml file.
  */
 public class UIController {
    //Image Width
@@ -43,8 +49,10 @@ public class UIController {
    private final Semaphore mutexPicture = new Semaphore(1);
    //Settings
    private Properties settings;
-   private Scene scene;
    private String currentIpAddress;
+   //Scene
+   private Scene scene;
+   //Threading and client
    private Thread workerThread;
    private Client client;
    private ConnectedWorker worker;
@@ -58,7 +66,9 @@ public class UIController {
 
    private boolean newInstruction = false;
    private boolean justDisconnected = false;
+   private ProtocolCommands lastCommand = null;
 
+   //FXML instances
    @FXML private Button BFrontLeft;
    @FXML private Button BFront;
    @FXML private Button BFrontRight;
@@ -68,7 +78,6 @@ public class UIController {
    @FXML private Button BBackwards;
    @FXML private Button BBackwardsRight;
    @FXML private Button BCamera;
-
 
    @FXML private Label LConnectionStatus;
    @FXML private TextField TFConnectionAddress;
@@ -117,10 +126,13 @@ public class UIController {
     * @param primaryStage the primary stage
     */
    public void load(Stage primaryStage) {
+      //Create client and threading
       client = new Client();
       worker = new ConnectedWorker();
       workerThread = new Thread(worker);
       workerThread.start();
+
+      //Set scene and add set settings/logo...
       primaryStage.setScene(scene);
       primaryStage.showingProperty().addListener(((observableValue, oldValue, showing) -> {
          if (showing) {
@@ -130,7 +142,8 @@ public class UIController {
       }));
       primaryStage.setTitle("Robot PI HEIG");
       primaryStage.getIcons().add(new Image("image/logo.png"));
-      //handles key pressing
+
+      //handles key/button pressing
       AnimationTimer timer = new AnimationTimer() {
          @Override
          public void handle(long l) {
@@ -141,26 +154,50 @@ public class UIController {
                   if (newInstruction) {
                      if (upPressed) {
                         if (leftPressed) {
-                           client.goFrontLeft();
+                           if (lastCommand != ProtocolCommands.frontleft) {
+                              client.goFrontLeft();
+                              lastCommand = ProtocolCommands.frontleft;
+                           }
                         } else if (rightPressed) {
-                           client.goFrontRight();
+                           if (lastCommand != ProtocolCommands.frontRight) {
+                              client.goFrontRight();
+                              lastCommand = ProtocolCommands.frontRight;
+                           }
                         } else if (!downPressed) {
-                           client.goForward();
+                           if (lastCommand != ProtocolCommands.forward) {
+                              client.goForward();
+                              lastCommand = ProtocolCommands.forward;
+                           }
                         }
                      } else if (downPressed) {
                         if (leftPressed) {
-                           client.goBackwardsLeft();
+                           if (lastCommand != ProtocolCommands.backwardsLeft) {
+                              client.goBackwardsLeft();
+                              lastCommand = ProtocolCommands.backwardsLeft;
+                           }
                         } else if (rightPressed) {
-                           client.goBackwardsRight();
+                           if (lastCommand != ProtocolCommands.backwardsRight) {
+                              client.goBackwardsRight();
+                              lastCommand = ProtocolCommands.backwardsRight;
+                           }
                         } else {
-                           client.goBackward();
+                           if (lastCommand != ProtocolCommands.backward) {
+                              client.goBackward();
+                              lastCommand = ProtocolCommands.backward;
+                           }
                         }
                      } else if (leftPressed) {
                         if (!rightPressed) {
-                           client.goLeft();
+                           if (lastCommand != ProtocolCommands.rotateLeft) {
+                              client.goLeft();
+                              lastCommand = ProtocolCommands.rotateLeft;
+                           }
                         }
                      } else if (rightPressed) {
-                        client.goRight();
+                        if (lastCommand != ProtocolCommands.rotateRight) {
+                           client.goRight();
+                           lastCommand = ProtocolCommands.rotateRight;
+                        }
                      } else {//robot ne bouge pas
                         if (client.isMoving()) { //si le robot n'est pas encore immobilisé
                            client.stop();
@@ -176,15 +213,14 @@ public class UIController {
                                         "The robot seems to have had an error while moving. Please check the robot " +
                                         "and " + "make sure he is not blocked.");
                } catch (InterruptedException e) {
-                  e.printStackTrace();
+               } catch (Client.CantConnectException e) {
+
                } finally {
                   mutex.release();
                }
-
-
             } else {
                if (justDisconnected) {
-                  LConnectionStatus.setText("Disconnected");
+                  worker.setDisconnected();
                   justDisconnected = false;
                }
             }
@@ -195,7 +231,7 @@ public class UIController {
    }
 
    /**
-    * Closes the ui
+    * Closes the ui and all the active threads
     */
    public void close() {
       settings.setProperty(SettingsParams.IP_ADDRESS.getParamName(), currentIpAddress);
@@ -223,11 +259,22 @@ public class UIController {
 
    }
 
+   /**
+    * Action when the user selects the closing option in the menu. Closes the ui
+    *
+    * @param event the event
+    */
    @FXML
    private void pressOnClose(ActionEvent event) {
       ((Stage) LConnectionStatus.getScene().getWindow()).close();
    }
 
+   /**
+    * Action when the user selects the about option in the menu. Opens the about page of this project, in our case
+    * the github page.
+    *
+    * @param event the event
+    */
    @FXML
    private void openAboutPage(ActionEvent event) {
       try {
@@ -241,8 +288,21 @@ public class UIController {
       }
    }
 
+   /**
+    * Action when the user presses the connect button on the ui or the option menu. Starts the connection procedure.
+    * Can create different error messages if the user input is incorrect, or if there are no devices that correspond
+    * to the given input
+    *
+    * @param event the event
+    */
    @FXML
    private void connectButtonPressed(ActionEvent event) {
+      if (worker.isConnected()) {
+         Util.createAlertFrame(Alert.AlertType.WARNING, "Already Connected", "Already Connected",
+                               "You are already connected to a robot. Please disconnect before attempting to " +
+                               "reconnect.");
+         return;
+      }
       if (TFConnectionAddress.getText().isEmpty()) {
          Util.createAlertFrame(Alert.AlertType.WARNING, "No ip adress", "No ip adress",
                                "Please write the ip adress of the targeted robot before pressing connect.");
@@ -261,17 +321,15 @@ public class UIController {
                worker.notify();
             }
          } catch (Client.CantConnectException e) {
-            e.printStackTrace();
             Util.createAlertFrame(Alert.AlertType.ERROR, "Error with the robot", "Error with the robot",
                                   "The robot had an issue while connecting to the client. Please restart the robot " +
                                   "then try again");
+            worker.setDisconnected();
          } catch (IOException | Client.IncorrectDeviceException e) {
-            e.printStackTrace();
             Util.createAlertFrame(Alert.AlertType.ERROR, "Wrong ip adress", "Wrong ip adress",
                                   "The ip adress you wrote does not coincide with that of a robot. Please check the " +
                                   "ip adress of the robot and try again.");
          } catch (InterruptedException e) {
-            e.printStackTrace();
          } finally {
             mutex.release();
          }
@@ -282,11 +340,66 @@ public class UIController {
 
    }
 
+   /**
+    * Action when the user selects the disconnect option in the menu. Disconnects the client from the robot, unless
+    * there was no connection.
+    *
+    * @param event the event
+    */
    @FXML
-   private void openDiscoverWindow(ActionEvent event) {
+   private void disconnectButtonPressed(ActionEvent event) {
+      if (!worker.isConnected()) {
+         Util.createAlertFrame(Alert.AlertType.WARNING, "You are not connected", "You are not connected",
+                               "You are not connected to a robot. Please connect to a device before attempting to " +
+                               "disconnect again.");
+         return;
+      }
+      try {
+         mutex.acquire();
+         client.disconnect();
+      } catch (IOException e) {
+         e.printStackTrace();
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      } finally {
+         mutex.release();
+      }
+      worker.setDisconnected();
 
    }
 
+   /**
+    * Action when the user presses the connect button on the ui or the option menu. Launches a new window controlled
+    * by the DiscoveryController class. The current window will wait for the new window to close before allowing
+    * further interactions
+    *
+    * @param event the event
+    */
+   @FXML
+   private void openDiscoverWindow(ActionEvent event) {
+      try {
+         FXMLLoader discoveryViewLoader = new FXMLLoader();
+         discoveryViewLoader.setLocation(getClass().getClassLoader().getResource("discoveryView.fxml"));
+         Scene discoveryScene = new Scene(discoveryViewLoader.load());
+         DiscoveryController discoveryController = discoveryViewLoader.getController();
+         discoveryController.setScene(discoveryScene, client);
+         Stage stage = new Stage();
+         stage.setAlwaysOnTop(true);
+         discoveryController.load(stage);
+         stage.initOwner(scene.getWindow());
+         stage.initModality(Modality.APPLICATION_MODAL);
+         stage.showAndWait();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Action when the user presses the camera button on the ui. If it is connected to a robopi device, it will ask
+    * for a photo to be taken by the device, and store the received image next to the .jar file.
+    *
+    * @param event the event
+    */
    @FXML
    private void cameraButtonPressed(ActionEvent event) {
       if (worker.isConnected()) {
@@ -307,6 +420,9 @@ public class UIController {
       }
    }
 
+   /**
+    * Sets up the different buttons to enable the control of the robot through the UI
+    */
    private void setupButtons() {
       BBackwards.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
          if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
@@ -427,6 +543,9 @@ public class UIController {
       addImageToButton(BCamera, "image/Camera.png");
    }
 
+   /**
+    * Sets up a reaction for specific keys to enable the control of the robot through them
+    */
    private void setupKeys() {
       scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
          switch (keyEvent.getCode()) {
@@ -443,7 +562,7 @@ public class UIController {
                upPressed = true;
                break;
             default:
-               break;
+               return;
          }
          newInstruction = true;
       });
@@ -462,7 +581,7 @@ public class UIController {
                upPressed = false;
                break;
             default:
-               break;
+               return;
          }
          newInstruction = true;
       });
@@ -492,7 +611,7 @@ public class UIController {
       private boolean running = true;
 
       /**
-       * SSignals to the worker that the UI is being closed, and that it needs to stop running
+       * Signals to the worker that the UI is being closed, and that it needs to stop running
        */
       public void signalShutdown() {
          this.running = false;
@@ -517,9 +636,18 @@ public class UIController {
          LConnectionStatus.setText("Connected");
       }
 
+      /**
+       * Informs the worker that will he was waiting the connection was lost
+       */
+      public void setDisconnected() {
+         this.connected = false;
+         LConnectionStatus.setText("Disconnected");
+      }
+
       @Override
       public void run() {
          while (running) {
+            //Wait until a connection is established
             if (!connected) {
                synchronized (this) {
                   try {
@@ -529,11 +657,15 @@ public class UIController {
                   }
                }
             }
+            //While connected, send ping every 10 sec to ensure the connection is still alive
             while (connected) {
                try {
                   Thread.sleep(10000);
                } catch (InterruptedException e) {
                   e.printStackTrace();
+               }
+               if (!connected) {
+                  break;
                }
                try {
                   mutex.acquire();
@@ -541,7 +673,7 @@ public class UIController {
                } catch (InterruptedException e) {
                   e.printStackTrace();
                } catch (Client.LostConnectionException | IOException e) {
-                  connected = false;
+                  setDisconnected();
                } finally {
                   mutex.release();
                }
@@ -551,11 +683,19 @@ public class UIController {
       }
    }
 
+   /**
+    * A worker that handles the picture process
+    */
    class PictureWorker implements Runnable {
       private final String photoPath;
 
+      /**
+       * Instantiates a new Picture worker.
+       *
+       * @param photoPath the photo path
+       */
       PictureWorker(String photoPath) {this.photoPath = photoPath;}
-      //TODO handle exceptions
+
       @Override
       public void run() {
          try {
@@ -563,21 +703,25 @@ public class UIController {
             client.takePicture(photoPath);
             Image image = new Image(new BufferedInputStream(new FileInputStream(photoPath)));
             imageView.setImage(image);
+            imageView.setFitWidth(image.getWidth());
+            imageView.setFitHeight(image.getHeight());
          } catch (InterruptedException e) {
-            e.printStackTrace();
-         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-         } catch (Client.CantConnectException e) {
             e.printStackTrace();
          } catch (IOException e) {
             e.printStackTrace();
+         } catch (Client.CantConnectException e) {
+            Util.createAlertFrame(Alert.AlertType.ERROR, "Connection lost", "Connection lost",
+                                  "The robot had an issue while connecting to the client. Please restart the robot " +
+                                  "then try again");
+            worker.setDisconnected();
          } catch (Client.RobotException e) {
-            e.printStackTrace();
+            Util.createAlertFrame(Alert.AlertType.ERROR, "The robot had an error while taking the picture",
+                                  "The robot had an error while taking the picture",
+                                  "There was an issue with the robot while taking a picture. Please check that the " +
+                                  "robot is fine then try again.");
          } finally {
             mutexPicture.release();
          }
       }
    }
-
-
 }

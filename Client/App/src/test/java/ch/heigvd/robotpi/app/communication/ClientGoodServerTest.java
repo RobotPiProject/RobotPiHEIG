@@ -3,8 +3,6 @@ package ch.heigvd.robotpi.app.communication;
 import ch.heigvd.robotpi.servertest.Server;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -17,7 +15,7 @@ class ClientGoodServerTest {
 
    @BeforeAll
    static void beforeAll() {
-      Thread srvThread = new Thread(new Server(2025, "good", true));
+      Thread srvThread = new Thread(new Server("good", true));
       srvThread.start();
       try {
          // To be sure that the server is running (tests on github)
@@ -83,11 +81,11 @@ class ClientGoodServerTest {
 
    @Test
    void disconnectWorks() {
-      assertThrows(IOException.class, () -> {
+      assertThrows(Client.CantConnectException.class, () -> {
          cli.connect("127.0.0.1");
          if (cli.isConnected()) {
             cli.disconnect();
-             if (!cli.isConnected()) { cli.goRight(); }
+            if (!cli.isConnected()) { cli.goRight(); }
          }
       });
    }

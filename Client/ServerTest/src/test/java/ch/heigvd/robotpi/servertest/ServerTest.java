@@ -25,7 +25,7 @@ class ServerTest {
 
    @Test
    void testConnectionGoodServer() throws IOException {
-      Server server = new Server(2025, "good", true);
+      Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
       try {
@@ -45,7 +45,7 @@ class ServerTest {
 
    @Test
    void testCommandsWorksGoodServer() throws IOException {
-      Server server = new Server(2025, "good", true);
+      Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
       try {
@@ -82,7 +82,7 @@ class ServerTest {
 
    @Test
    void testDisconnWorks() throws IOException {
-      Server server = new Server(2025, "good", true);
+      Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
       try {
@@ -116,7 +116,7 @@ class ServerTest {
 
    @Test
    void testPingWorks() throws IOException {
-      Server server = new Server(2025, "good", true);
+      Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
       try {
