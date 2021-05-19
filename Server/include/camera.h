@@ -31,7 +31,7 @@ void setCamSettings(CamSettings newSettings);
  * @brief Takes a picture and stores it in the given folder with the given name
  * 
  * @param name Name of the future picture file, without extension
- * @param path Path to store the image into, must finish with a "/"
+ * @param path Path to store the image into
  * @return int 0 if no error was encountered, other value otherwise
  */
 int camSnap(const char *path, const char *name);
