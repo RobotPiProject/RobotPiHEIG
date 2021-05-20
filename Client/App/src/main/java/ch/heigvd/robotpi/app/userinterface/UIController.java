@@ -201,6 +201,7 @@ public class UIController {
                      } else {//robot ne bouge pas
                         if (client.isMoving()) { //si le robot n'est pas encore immobilisé
                            client.stop();
+                           lastCommand = ProtocolCommands.stop;
                         }
                      }
                      newInstruction = false;
