@@ -699,10 +699,12 @@ public class UIController {
 
       @Override
       public void run() {
+         BufferedInputStream stream = null;
          try {
             mutexPicture.acquire();
             client.takePicture(photoPath);
-            Image image = new Image(new BufferedInputStream(new FileInputStream(photoPath)));
+            stream = new BufferedInputStream(new FileInputStream(photoPath));
+            Image image = new Image(stream);
             imageView.setImage(image);
             imageView.setFitWidth(image.getWidth());
             imageView.setFitHeight(image.getHeight());
@@ -722,6 +724,12 @@ public class UIController {
                                   "robot is fine then try again.");
          } finally {
             mutexPicture.release();
+            if (stream!=null){
+               try {
+                  stream.close();
+               } catch (IOException e) {
+               }
+            }
          }
       }
    }
