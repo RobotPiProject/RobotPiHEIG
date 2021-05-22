@@ -28,7 +28,8 @@
    <center>
       <TableView fx:id="TVObjectsDiscovered" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="388.0" prefWidth="617.0" BorderPane.alignment="CENTER">
         <columns>
-          <TableColumn fx:id="TCIpAdress" prefWidth="617.0" resizable="false" text="IpAdress" />
+          <TableColumn fx:id="TCIpAdress" prefWidth="467.0" resizable="false" text="IpAdress" />
+            <TableColumn fx:id="TCSelect" prefWidth="150.0" text="Select" />
         </columns>
       </TableView>
    </center>

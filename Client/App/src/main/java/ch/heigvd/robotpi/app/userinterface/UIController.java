@@ -383,7 +383,7 @@ public class UIController {
          discoveryViewLoader.setLocation(getClass().getClassLoader().getResource("discoveryView.fxml"));
          Scene discoveryScene = new Scene(discoveryViewLoader.load());
          DiscoveryController discoveryController = discoveryViewLoader.getController();
-         discoveryController.setScene(discoveryScene, client);
+         discoveryController.setScene(discoveryScene, client, TFConnectionAddress);
          Stage stage = new Stage();
          stage.setAlwaysOnTop(true);
          discoveryController.load(stage);
