@@ -13,13 +13,14 @@ LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
 LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
-TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -l:$(CMOCKA_STATIC)
 TEST_ROBOT_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
 TEST_ROBOT_APPNAME = robotTest
 LIBNAME = libMotor.a
+CMOCKA_STATIC = libcmocka-static.a
 
 SRC_DIR = src
 INCLUDE_DIR = include
@@ -97,9 +98,7 @@ install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
 install_libcmocka:
-	cp $(LIB_DIR)/libcmocka.so.0.7.0 $(SYSLIBS)
-	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
-	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
+	cp $(LIB_DIR)/libcmocka-static.a $(SYSLIBS)
 	cp $(SRC_DIR)/cmocka/*.h $(HEADERS)/
 
 install_libsocket:
