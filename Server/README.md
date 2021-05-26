@@ -64,6 +64,10 @@ pi@raspberry$ echo 'SUBSYSTEM=="mem", KERNEL=="mem", GROUP="kmem", MODE="0660"' 
 pi@raspberry$ sudo reboot
 ```
 
+### Discovery setup
+
+The Robot advertises its RoboPi server capabilities with a zeroconf/avahi/mDNS service. Run `make deploy_discovery` to deploy the service file to the Pi. The avahi daemon on the Pi should restart automatically. If not, restart it with `systemctl reload avahi-daemon`. To check the status of the avahi service, run `service avahi-daemon status`.
+
 ##  Toolchain setup
 
 We use the toolchain provided by the [RPi-Cpp-Toolchain](https://github.com/tttapa/RPi-Cpp-Toolchain) project. It uses docker to retrieve and generate the appropriate toolchain and sysroot for the Raspberry Pi Robot.

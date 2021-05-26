@@ -1,8 +1,14 @@
 #include <server.h>
 #include <protocol.h>
+#include <motor.h>
 
 int client_connected = 0;
 
+/**
+ * Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
+ * @param response the response to be prepared
+ * @return the total number of bytes of the response (including the newly added line-terminating character)
+ */
 unsigned int prepare_response(char *response) {
     unsigned int res_len = strlen(response);
     response[res_len] = '\n';
@@ -10,6 +16,15 @@ unsigned int prepare_response(char *response) {
     return res_len;
 }
 
+/**
+ * Read from the given socket until we come across a line-terminating character ('\n')
+ * @param prefix a character prefix for the messages printed to the console, useful to determine from where the function was called
+ * @param sockfd an open socket from which the next message will be read
+ * @param buffer a character buffer used to receive from the socket
+ * @param dest a character buffer to which the received message will be copied, up to and not including the line-terminating character
+ * @param buffer_size the size of the given character buffer
+ * @return the total number of bytes that were received
+ */
 unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t buffer_size) {
     unsigned int bytes_read;
     int cmd_end = 0;
@@ -109,7 +124,6 @@ void *session_task(void *sockfd) {
         }
         fprintf(stdout, "[server] Sending message: %s\n", response);
 
-        // append new line character
         unsigned int res_len = prepare_response(response);
         send_msg("[server] ", client_sockfd, response, res_len);
         bzero(cmd, CMD_LEN);
@@ -130,6 +144,12 @@ int server() {
         return EXIT_FAILURE;
     }
 
+    if(motorInit())
+    {
+        fprintf(stderr, "[server] Unable to initialise motors\n");
+        return EXIT_FAILURE;
+    }
+
     while (1) {
         int client_sockfd = 0;
         int img_server_sockfd = 0;
@@ -143,7 +163,6 @@ int server() {
             pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
             pthread_t img_t;
             pthread_create(&img_t, NULL, img_task, (void *) &img_server_sockfd);
-            fprintf(stdout, "[server] Bye\n");
         }
     }
 }

@@ -1,11 +1,12 @@
 #include <protocol.h>
 #include <motor.h>
+#include <camera.h>
 
 extern int client_connected;
 
 /**
  * Put the string representation of the given response code in response
- * @param response the character string the representation will be written into
+ * @param response the CMD_LEN-byte character string the representation will be written into
  * @param response_code the numerical response code
  */
 void put_response(char *response, int response_code) {
@@ -66,11 +67,10 @@ void put_response(char *response, int response_code) {
 
 /**
  * Process the command given in cmd, and put the response in response
- * @param cmd pointer to a char array containing the command
- * @param response pointer to a char array where the response will be put
- * @return a return value different from 0 indicates that an error has occured
+ * @param cmd pointer to a CMD_LEN-byte char array containing the command
+ * @param response pointer to a CMD_LEN-byte char array where the response will be put
  */
-int process_cmd(char *cmd, char *response) {
+void process_cmd(char *cmd, char *response) {
     int response_code = CMD_ERR;
     if (!strncmp(cmd, "CONN", CMD_LEN)) {
         response_code = CONN_OK;
@@ -111,12 +111,14 @@ int process_cmd(char *cmd, char *response) {
         fprintf(stdout, "Commande non reconnue : %s\n", cmd);
     }
     put_response(response, response_code);
-    return 0;
 }
 
+/**
+ * The thread that is started when the client requests a picture. Take a picture and send it to the client.
+ * @param ptr not used
+ */
 void *img_task(void *ptr) {
     int *img_server_sockfd = (int*) ptr;
-    char *fname = "/home/pi/robot.jpg";
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
@@ -139,25 +141,27 @@ void *img_task(void *ptr) {
         if (strncmp(cmd, "PICTURE", CMD_LEN) != 0) {
             fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
             put_response(response, PICTURE_ERR);
-            response[strlen(response)] = '\n';
-            send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+            unsigned int res_len = prepare_response(response);
+            send_msg("[pic] ", img_client_sockfd, response, res_len);
             shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
             continue;
         } else {
             if (client_connected == 1) {
                 put_response(response, PICTURE_OK);
-                response[strlen(response)] = '\n';
+                unsigned int res_len = prepare_response(response);
                 fprintf(stdout, "Sending message: %s\n", response);
-                send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+                send_msg("[pic] ", img_client_sockfd, response, res_len);
             } else {
                 put_response(response, PICTURE_ERR);
-                response[strlen(response)] ='\n';
-                send_msg("[pic] ", img_client_sockfd, response, strlen(response));
+                unsigned int res_len = prepare_response(response);
+                send_msg("[pic] ", img_client_sockfd, response, res_len);
                 shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
             }
         }
         /* start sending image */
+        camSnap("/home/pi", "pic");
+        char *fname = "/home/pi/pic.jpg";
         FILE *file_handle = fopen(fname, "r");
         send_picture(img_client_sockfd, file_handle, buffer);
         explicit_bzero(cmd, CMD_LEN);
@@ -179,6 +183,13 @@ void *img_task(void *ptr) {
     }
 }
 
+/**
+ * Send a picture using the provided socket file descriptor and file pointer.
+ * @param sockfd an open socket through which the picture will be sent
+ * @param fp an open file pointer to the picture to send
+ * @param buffer the buffer to use when sending the picture through the socket
+ * @return the total number of bytes that were sent
+ */
 unsigned int send_picture(int sockfd, FILE *fp, char *buffer) {
     fseek(fp, 0, SEEK_END);
     unsigned long filesize = ftell(fp);
