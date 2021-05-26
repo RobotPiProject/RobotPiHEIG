@@ -93,6 +93,9 @@ public class Client {
          // Wait a bit
          Thread.sleep(3000);
 
+         jmdns.removeServiceListener("_robopi._tcp.local.",sampleListener);
+         jmdns.close();
+
          return sampleListener.getAddresses();
 
       } catch (UnknownHostException e) {
