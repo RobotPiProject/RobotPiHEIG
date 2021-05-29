@@ -94,7 +94,7 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
     unsigned int total_bytes = 0;
     while (!cmd_end) {
         //bytes_read = recv(sockfd, buffer, buffer_size, 0);
-        bytes_read = SSL_read(sslCmd, buffer, BUFFER_SIZE);
+        bytes_read = SSL_read(sslCmd, buffer, buffer_size);
         total_bytes += bytes_read;
         if (bytes_read < 0) {
             fprintf(stderr, "%sError reading socket\n", prefix);
@@ -132,7 +132,7 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
 
 unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len) {
     //unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
-    unsigned int bytes_sent = SSL_write(sslCmd, response, strlen(response));
+    unsigned int bytes_sent = SSL_write(sslCmd, msg, msg_len);
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
     for (int i = 0; i < bytes_sent; i++) {
         fprintf(stdout, " 0x%X", msg[i]);
