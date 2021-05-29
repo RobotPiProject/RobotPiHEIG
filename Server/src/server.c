@@ -1,8 +1,68 @@
 #include <server.h>
 #include <protocol.h>
 #include <motor.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
 
 int client_connected = 0;
+SSL *sslCmd;
+SSL *sslImg;
+
+void InitializeSSL()
+{
+    // Provide human-readable error messages.
+    SSL_load_error_strings();
+    // Register ciphers.
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
+}
+
+
+void DestroySSL()
+{
+    ERR_free_strings();
+    EVP_cleanup();
+}
+
+void ShutdownSSL()
+{
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+}
+
+
+SSL_CTX *create_context()
+{
+    const SSL_METHOD *method;
+    SSL_CTX *ctx;
+
+    method = TLS_method();
+
+    ctx = SSL_CTX_new(method);
+    if (!ctx) {
+	perror("Unable to create SSL context");
+	ERR_print_errors_fp(stderr);
+	exit(EXIT_FAILURE);
+    }
+
+    return ctx;
+}
+
+void configure_context(SSL_CTX *ctx)
+{
+    SSL_CTX_set_ecdh_auto(ctx, 1);
+
+    if (SSL_CTX_use_certificate_file(ctx, "src/robotpi.pem", SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+	exit(EXIT_FAILURE);
+    }
+
+    if (SSL_CTX_use_PrivateKey_file(ctx, "src/key.pem", SSL_FILETYPE_PEM) <= 0 ) {
+        ERR_print_errors_fp(stderr);
+	exit(EXIT_FAILURE);
+    }
+}
 
 /**
  * Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
@@ -31,7 +91,8 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
     unsigned int current_offet = 0;
     unsigned int total_bytes = 0;
     while (!cmd_end) {
-        bytes_read = recv(sockfd, buffer, buffer_size, 0);
+        //bytes_read = recv(sockfd, buffer, buffer_size, 0);
+        bytes_read = SSL_read(sslCmd, buffer, BUFFER_SIZE);
         total_bytes += bytes_read;
         if (bytes_read < 0) {
             fprintf(stderr, "%sError reading socket\n", prefix);
@@ -68,7 +129,8 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
 }
 
 unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len) {
-    unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
+    //unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
+    unsigned int bytes_sent = SSL_write(sslCmd, response, strlen(response));
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
     for (int i = 0; i < bytes_sent; i++) {
         fprintf(stdout, " 0x%X", msg[i]);
@@ -150,6 +212,11 @@ int server() {
         return EXIT_FAILURE;
     }
 
+    // TLS init
+    InitializeSSL();
+    SSL_CTX *ctx = create_context();
+    configure_context(ctx);
+
     while (1) {
         int client_sockfd = 0;
         int img_server_sockfd = 0;
@@ -157,7 +224,24 @@ int server() {
         client_sockfd = accept_inet_stream_socket(server_sockfd, 0, 0, 0, 0, 0, 0);
         if (client_sockfd < 0) {
             fprintf(stderr, "[server] Error on accept\n");
-        } else {
+        } 
+        
+        // Start TLS connexion for the commands
+        sslCmd = SSL_new(ctx);
+        SSL_set_fd(sslCmd, client_sockfd);
+	SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
+
+	// Start TLS connexion for the images
+        sslImg = SSL_new(ctx);
+        SSL_set_fd(sslImg, client_sockfd);
+	SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
+
+	if (SSL_accept(sslCmd) <= 0){
+	    ERR_print_errors_fp(stderr);  // !!!!!! MSg et gestion des ereur !!!!!!!!
+            return EXIT_FAILURE;	
+	} else if(SSL_accept(sslImg) <= 0){
+	    ERR_print_errors_fp(stderr);
+	} else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
             pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);

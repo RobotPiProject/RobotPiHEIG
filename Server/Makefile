@@ -12,7 +12,7 @@ CC = gcc
 LD = ld
 AR = ar
 CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR) $(TESTING)
-LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
+LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket -lssl -lcrypto
 TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket -l:$(CMOCKA_STATIC) \
 					  -Wl,--wrap=runForward \
 					  -Wl,--wrap=runBackward \
@@ -103,7 +103,7 @@ lib: $(LIBNAME)
 $(LIBNAME): $(LIBOBJS)
 	$(BUILDTOOLS)-$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $^
 
-install_libs: install_bcm2835 install_libMotor install_libcmocka install_libsocket
+install_libs: install_bcm2835 install_libMotor install_libcmocka install_libsocket install_sslLib
 
 #1) [root] Execute once per toolchain reset
 install_bcm2835:
@@ -124,6 +124,10 @@ install_libcmocka:
 install_libsocket:
 	cp $(LIB_DIR)/libsocket.a $(SYSLIBS)
 	cp $(SRC_DIR)/libsocket/*.h $(HEADERS)/
+
+install_sslLib:
+	cp -r $(LIB_DIR)/openssl_libs/* $(SYSLIBS)
+	cp -r $(SRC_DIR)/openssl $(HEADERS)
 
 install: app
 	cp $(OUT_DIR)/$(APPNAME) $(PI_INSTALL_DIR)
