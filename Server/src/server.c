@@ -27,8 +27,10 @@ void DestroySSL()
 
 void ShutdownSSL()
 {
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
+    SSL_shutdown(sslCmd);
+    SSL_free(sslCmd);
+    SSL_shutdown(sslImg);
+    SSL_free(sslImg);
 }
 
 
