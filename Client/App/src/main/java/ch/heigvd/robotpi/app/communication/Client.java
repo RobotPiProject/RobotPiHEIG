@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
+import javax.net.ssl.*;
 
 public class Client {
    public final int PORT = 2025;
