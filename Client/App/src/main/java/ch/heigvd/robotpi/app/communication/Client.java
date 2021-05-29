@@ -17,7 +17,9 @@ import java.util.Set;
 public class Client {
    public final int PORT = 2025;
    public final int PORTPICTURE = 2026;
-   private Socket clientSocket;
+   private SSLSocket clientSocket = null;
+   private static final String[] protocols = new String[] {"TLSv1.3"};
+   private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"}; // TLS_AES_128_GCM_SHA256
    private String ipAddress;
    private PrintWriter out;
    private BufferedReader in;
@@ -25,59 +27,114 @@ public class Client {
    private boolean isMoving = false;
 
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
-      clientSocket = new Socket(ip, PORT);
-      ipAddress = ip;
-      out = new PrintWriter(clientSocket.getOutputStream(), true);
-      in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      isConnected = true;
-      out.print("CONN\n");
-      out.flush();
-      String message = in.readLine();
-      if (message.equals("CONN_ERR")) {
-         clientSocket.close();
-         throw new CantConnectException();
-      } else if (!message.equals("CONN_OK")) {
-         clientSocket.close();
-         throw new IncorrectDeviceException();
-      }
+        try (SSLSocket socket = createSocket(ip, PORT)) {
+            this.clientSocket = socket;
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            printSocketInfo(clientSocket);
+            clientSocket.startHandshake();
+
+
+            isConnected = true;
+
+            String message = in.readLine(); // welcom msg
+            System.out.println("recu: " + message); // REMOVE
+
+            out.println("CONN");
+            out.flush();
+            //while(!in.ready()) {
+            message = in.readLine();
+            System.out.println("recu: " + message); // REMOVE
+            //}
+
+
+            if (message.equals("CONN_ERR")) {
+                clientSocket.close();
+                throw new CantConnectException();
+            } else if (!message.equals("CONN_OK")) {
+                clientSocket.close();
+                throw new IncorrectDeviceException();
+            }
+        } catch (IOException e) {
+            System.err.println(e.toString());
+        }
    }
+
+    private static SSLSocket createSocket(String host, int port) throws IOException {
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault()
+                .createSocket(host, port);
+        socket.setEnabledProtocols(protocols);
+        socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+
+        // REMOVE
+        for (String c : socket.getSupportedProtocols())
+        System.out.println(c);
+        return socket;
+    }
+
+    // TO REMOVE
+    private static void printSocketInfo(SSLSocket s) {
+        System.out.println("Socket class: "+s.getClass());
+        System.out.println("   Remote address = "
+                +s.getInetAddress().toString());
+        System.out.println("   Remote port = "+s.getPort());
+        System.out.println("   Local socket address = "
+                +s.getLocalSocketAddress().toString());
+        System.out.println("   Local address = "
+                +s.getLocalAddress().toString());
+        System.out.println("   Local port = "+s.getLocalPort());
+        System.out.println("   Need client authentication = "
+                +s.getNeedClientAuth());
+        SSLSession ss = s.getSession();
+        System.out.println("   Cipher suite = "+ss.getCipherSuite());
+        System.out.println("   Protocol = "+ss.getProtocol());
+    }
 
    public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
       if (!isConnected) {
          throw new CantConnectException();
       }
 
-      Socket socketPicture = new Socket(ipAddress, PORTPICTURE);
+        try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
 
-      PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
-      BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+            PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+            BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
-      outPic.print("PICTURE\n");
-      outPic.flush();
-      String message = inPic.readLine();
+            printSocketInfo(socketPicture);
+            socketPicture.startHandshake();
 
-      if (!message.equals("PICTURE_OK")) {
-         throw new RobotException();
-      }
-
-      InputStream is = socketPicture.getInputStream();
-      BufferedImage bi;
-
-      while (true) {
-         try {
-            bi = ImageIO.read(is);
-            outPic.print("RECEIVED_OK\n");
+            outPic.print("PICTURE\n");
             outPic.flush();
-            break;
-         } catch (IOException e) {
-            outPic.print("RESEND_PICTURE\n");
-            outPic.flush();
-         }
-      }
+            String message = inPic.readLine();
 
-      socketPicture.close();
+            if (!message.equals("PICTURE_OK")) {
+                throw new RobotException();
+            }
 
-      ImageIO.write(bi, "jpg", new File(imagename));
+            InputStream is = socketPicture.getInputStream();
+            BufferedImage bi;
+
+            while (true) {
+                try {
+                    bi = ImageIO.read(is);
+                    outPic.print("RECEIVED_OK\n");
+                    outPic.flush();
+                    break;
+                } catch (IOException e) {
+                    outPic.print("RESEND_PICTURE\n");
+                    outPic.flush();
+                }
+            }
+
+            socketPicture.close();
+
+            ImageIO.write(bi, "jpg", new File(imagename));
+
+        } catch (IOException e){
+            System.err.println(e.toString());
+            throw new CantConnectException();
+        }
 
    }
 
