@@ -31,6 +31,7 @@ public class Server implements Runnable {
    private BufferedReader in = null;
    private PrintWriter out = null;
    private PictureServer pictureServer;
+   private Thread pictureThread;
    private boolean stopRequested = false;
 
    /**
@@ -67,7 +68,7 @@ public class Server implements Runnable {
       LOG.log(Level.INFO, "Start {0} server ...", serverType);
       serverSocket = new ServerSocket(PORT);
       pictureServer = new PictureServer();
-      Thread pictureThread = new Thread(pictureServer);
+      pictureThread = new Thread(pictureServer);
       pictureThread.start();
 
       try {
@@ -248,7 +249,10 @@ public class Server implements Runnable {
          }
          serverSocket.close();
          pictureServer.stop();
+         pictureThread.join();
       } catch (IOException e) {
+      } catch (InterruptedException e) {
+         e.printStackTrace();
       }
    }
 
@@ -278,8 +282,8 @@ public class Server implements Runnable {
             in.close();
             out.close();
          }
-         serverSocket.close();
          running = false;
+         serverSocket.close();
       }
 
       @Override
@@ -316,7 +320,7 @@ public class Server implements Runnable {
 
             }
             if (!running) {
-               break;
+               return;
             }
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream());
