@@ -126,7 +126,7 @@ unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_
 }
 
 unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len) {
-    unsigned int bytes_sent = SL_write(sslCmd, msg, msg_len);
+    unsigned int bytes_sent = SSL_write(sslCmd, msg, msg_len);
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
     for (int i = 0; i < bytes_sent; i++) {
         fprintf(stdout, " 0x%X", msg[i]);
@@ -225,30 +225,34 @@ int server() {
             fprintf(stderr, "[server] Error on accept: %s\n", strerror(errno));
         } 
 		
-		 // Create TLS socket for the commands
+        // Create TLS socket for the commands
         sslCmd = SSL_new(ctx);
         SSL_set_fd(sslCmd, client_sockfd);
-		SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
+	SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
 
-		// Create TLS socket for the images
+	// Create TLS socket for the images
         sslImg = SSL_new(ctx);
 		
-		else {
+        if (SSL_accept(sslCmd) <= 0) {
+            fprintf(stderr, "[server] Error on sslCmd accept");
+            ERR_print_errors_fp(stderr);
+            return EXIT_FAILURE;
+	else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
             pthread_create(&session_t, NULL, session_task, (void *) sslCmd);
             pthread_create(&img_t, NULL, img_task, (void *) sslImg);
 			
-			// Pourquoi pas de join? C moi qui les ai ajouté
-	        pthread_join(session_t, NULL);
+	    // Pourquoi pas de join? C moi qui les ai ajouté
+	    pthread_join(session_t, NULL);
             pthread_join(img_t, NULL);
 			
-			shutdown_openssl(sslCmd, sslImg);
-			shutdown_socket("server", "client", client_sockfd);
-            shutdown_socket("server", "image server", img_server_sockfd);
+	  shutdown_openssl(sslCmd, sslImg);
+	  shutdown_socket("server", "client", client_sockfd);
+          shutdown_socket("server", "image server", img_server_sockfd);
         }
     }
 	
-	SSL_CTX_free(ctx);
+    SSL_CTX_free(ctx);
     cleanup_openssl();
 }
