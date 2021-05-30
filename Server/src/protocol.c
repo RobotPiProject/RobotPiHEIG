@@ -158,8 +158,7 @@ void *img_task(void *ptr) {
                 put_response(response, PICTURE_ERR);
                 unsigned int res_len = prepare_response(response);
                 send_msg("[pic] ", sslImg, response, res_len);
-                // a voir avec openssl
-                //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+                shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
             } else {
                 if (client_connected == 1) {
@@ -171,7 +170,7 @@ void *img_task(void *ptr) {
                     put_response(response, PICTURE_ERR);
                     unsigned int res_len = prepare_response(response);
                     send_msg("[pic] ", sslImg, response, res_len);
-                    //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+                    shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                     continue;
                 }
             }
@@ -195,7 +194,7 @@ void *img_task(void *ptr) {
                 fprintf(stderr, "Invalid Client response: %s\n", cmd);
             }
             fclose(file_handle);
-            //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+            shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
         }
     }
 }

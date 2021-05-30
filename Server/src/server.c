@@ -221,7 +221,6 @@ int server() {
 
     while (1) {
         int client_sockfd = 0;
-        int img_server_sockfd = 0;
         fprintf(stdout, "[server] Waiting for clients...\n");
         client_sockfd = accept_inet_stream_socket(server_sockfd, 0, 0, 0, 0, 0, 0);
         if (client_sockfd < 0) {
@@ -251,7 +250,6 @@ int server() {
             pthread_join(img_t, NULL);
             shutdown_openssl();
             close(client_sockfd);
-            close(img_server_sockfd);
             shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
         }
     }
