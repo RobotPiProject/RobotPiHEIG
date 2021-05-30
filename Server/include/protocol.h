@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
 #include <libinetsocket.h>
 #include <pthread.h>
@@ -32,6 +33,8 @@
 
 void put_response(char *response, int response_code);
 void process_cmd(char *cmd, char *response);
+int shutdown_socket(char *prefix, char *sockdesc, int sockfd);
+int destroy_socket(char *prefix, char *sockdesc, int sockfd);
 void *img_task(void *ptr);
 unsigned int send_picture(int sockfd, FILE *fp, char *buffer);
 

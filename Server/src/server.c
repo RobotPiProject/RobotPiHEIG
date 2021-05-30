@@ -3,6 +3,7 @@
 #include <motor.h>
 
 int client_connected = 0;
+int img_server_sockfd = 0;
 
 /**
  * Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
@@ -23,7 +24,7 @@ unsigned int prepare_response(char *response) {
  * @param buffer a character buffer used to receive from the socket
  * @param dest a character buffer to which the received message will be copied, up to and not including the line-terminating character
  * @param buffer_size the size of the given character buffer
- * @return the total number of bytes that were received
+ * @return the total number of bytes that were received, -1 if there was an error
  */
 unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t buffer_size) {
     unsigned int bytes_read;
@@ -35,11 +36,11 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
         total_bytes += bytes_read;
         if (bytes_read < 0) {
             fprintf(stderr, "%sError reading socket\n", prefix);
-            pthread_exit(NULL);
+            return -1;
         }
         if (bytes_read == 0) { // connection is closed
             fprintf(stdout, "%sClient disconnected\n", prefix);
-            pthread_exit(NULL);
+            return -1;
         }
 
         fprintf(stdout, "%s%d bytes received:", prefix, bytes_read);
@@ -129,18 +130,19 @@ void *session_task(void *sockfd) {
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
         if (should_quit == 1) {
-            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+            shutdown_socket("server", "client", client_sockfd);
+            shutdown_socket("server", "image server", img_server_sockfd);
+            client_connected = 0;
             pthread_exit(NULL);
         }
     }
-    close(client_sockfd);
 }
 
 int server() {
     int server_sockfd = 0;
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
-        fprintf(stderr, "[server] Could not create server socket\n");
+        fprintf(stderr, "[server] Could not create server socket: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
 
@@ -152,16 +154,15 @@ int server() {
 
     while (1) {
         int client_sockfd = 0;
-        int img_server_sockfd = 0;
+        pthread_t img_t = 0;
         fprintf(stdout, "[server] Waiting for clients...\n");
         client_sockfd = accept_inet_stream_socket(server_sockfd, 0, 0, 0, 0, 0, 0);
         if (client_sockfd < 0) {
-            fprintf(stderr, "[server] Error on accept\n");
+            fprintf(stderr, "[server] Error on accept: %s\n", strerror(errno));
         } else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
             pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
-            pthread_t img_t;
             pthread_create(&img_t, NULL, img_task, (void *) &img_server_sockfd);
         }
     }
