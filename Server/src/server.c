@@ -237,7 +237,7 @@ int server() {
             fprintf(stderr, "[server] Error on sslCmd accept");
             ERR_print_errors_fp(stderr);
             return EXIT_FAILURE;
-	else {
+	} else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
             pthread_create(&session_t, NULL, session_task, (void *) sslCmd);
