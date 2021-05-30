@@ -240,10 +240,10 @@ int server() {
 
 	if (SSL_accept(sslCmd) <= 0){
 	    ERR_print_errors_fp(stderr);  // !!!!!! MSg et gestion des ereur !!!!!!!!
-            fprintf("erreur sur sslCmd");
+            fprintf(stderr, "erreur sur sslCmd");
 	    return EXIT_FAILURE;	
 	} else if(SSL_accept(sslImg) <= 0){
-            fprintf("erreur sur sslImg");
+            fprintf(stderr, "erreur sur sslImg");
 	    ERR_print_errors_fp(stderr);
 	} else {
             fprintf(stdout, "[server] Connection established\n");
