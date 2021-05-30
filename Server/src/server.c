@@ -235,13 +235,15 @@ int server() {
 
 	// Start TLS connexion for the images
         sslImg = SSL_new(ctx);
-        SSL_set_fd(sslImg, client_sockfd);
+        SSL_set_fd(sslImg, img_server_sockfd);
 	SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
 
 	if (SSL_accept(sslCmd) <= 0){
 	    ERR_print_errors_fp(stderr);  // !!!!!! MSg et gestion des ereur !!!!!!!!
-            return EXIT_FAILURE;	
+            fprintf("erreur sur sslCmd");
+	    return EXIT_FAILURE;	
 	} else if(SSL_accept(sslImg) <= 0){
+            fprintf("erreur sur sslImg");
 	    ERR_print_errors_fp(stderr);
 	} else {
             fprintf(stdout, "[server] Connection established\n");
