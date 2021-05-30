@@ -20,7 +20,7 @@ public class Client {
    public final int PORTPICTURE = 2026;
    private SSLSocket clientSocket = null;
    private static final String[] protocols = new String[] {"TLSv1.3"};
-   private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"}; // TLS_AES_128_GCM_SHA256
+   private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    private String ipAddress;
    private PrintWriter out;
    private BufferedReader in;
@@ -39,16 +39,11 @@ public class Client {
 
             isConnected = true;
 
-            String message = in.readLine(); // welcom msg
-            System.out.println("recu: " + message); // REMOVE
-
-            out.println("CONN");
+            out.print("CONN\n");
             out.flush();
-            //while(!in.ready()) {
-            message = in.readLine();
-            System.out.println("recu: " + message); // REMOVE
-            //}
 
+            String message = in.readLine();
+            
 
             if (message.equals("CONN_ERR")) {
                 clientSocket.close();
@@ -68,13 +63,10 @@ public class Client {
         socket.setEnabledProtocols(protocols);
         socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
 
-        // REMOVE
-        for (String c : socket.getSupportedProtocols())
-        System.out.println(c);
         return socket;
     }
 
-    // TO REMOVE
+
     private static void printSocketInfo(SSLSocket s) {
         System.out.println("Socket class: "+s.getClass());
         System.out.println("   Remote address = "
