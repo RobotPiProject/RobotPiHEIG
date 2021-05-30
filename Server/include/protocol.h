@@ -7,6 +7,9 @@
 #include <libinetsocket.h>
 #include <pthread.h>
 #include <server.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
 
 #define CONN_OK 42
 #define CONN_ERR 43

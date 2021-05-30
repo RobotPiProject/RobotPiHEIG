@@ -1,9 +1,6 @@
 #include <server.h>
 #include <protocol.h>
 #include <motor.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
 
 int client_connected = 0;
 

@@ -1,9 +1,6 @@
 #include <protocol.h>
 #include <motor.h>
 #include <camera.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
 
 extern int client_connected;
 
@@ -185,7 +182,7 @@ void *img_task(void *ptr) {
             while (strncmp(cmd, "RESEND_PICTURE", CMD_LEN) == 0) {
                 send_picture(sslImg, file_handle, buffer);
                 explicit_bzero(cmd, CMD_LEN);
-                read_msg("[pic] ", sslimg, buffer, cmd, BUFFER_SIZE);
+                read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
                 fprintf(stdout, "[pic] Message received: %s\n", cmd);
             }
             if (strncmp(cmd, "RECEIVED_OK", CMD_LEN) == 0) {

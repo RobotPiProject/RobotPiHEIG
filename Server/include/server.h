@@ -11,6 +11,9 @@
 #include <string.h>
 #include <signal.h>
 #include <libinetsocket.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
 
 #define LISTENING_PORT "2025"
 #define BUFFER_SIZE 32
