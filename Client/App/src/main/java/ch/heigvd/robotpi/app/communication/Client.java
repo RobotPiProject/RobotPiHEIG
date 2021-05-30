@@ -54,6 +54,7 @@ public class Client {
             }
         } catch (IOException e) {
             System.err.println(e.toString());
+	    throw new CantConnectException();
         }
    }
 

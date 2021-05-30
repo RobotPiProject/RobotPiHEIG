@@ -3,6 +3,7 @@
 #include <motor.h>
 
 int client_connected = 0;
+int img_server_sockfd = 0;
 
 void init_openssl()
 {
@@ -20,7 +21,7 @@ void cleanup_openssl()
     EVP_cleanup();
 }
 
-void shutdown_openssl()
+void shutdown_openssl(SSL *sslCmd, SSL *sslImg)
 {
     SSL_shutdown(sslCmd);
     SSL_free(sslCmd);
@@ -80,7 +81,7 @@ unsigned int prepare_response(char *response) {
  * @param buffer a character buffer used to receive from the socket
  * @param dest a character buffer to which the received message will be copied, up to and not including the line-terminating character
  * @param buffer_size the size of the given character buffer
- * @return the total number of bytes that were received
+ * @return the total number of bytes that were received, -1 if there was an error
  */
 unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size) {
     unsigned int bytes_read;
@@ -88,16 +89,15 @@ unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_
     unsigned int current_offet = 0;
     unsigned int total_bytes = 0;
     while (!cmd_end) {
-        //bytes_read = recv(sockfd, buffer, buffer_size, 0);
         bytes_read = SSL_read(sslCmd, buffer, buffer_size);
         total_bytes += bytes_read;
         if (bytes_read < 0) {
             fprintf(stderr, "%sError reading socket\n", prefix);
-            pthread_exit(NULL);
+            return -1;
         }
         if (bytes_read == 0) { // connection is closed
             fprintf(stdout, "%sClient disconnected\n", prefix);
-            pthread_exit(NULL);
+            return -1;
         }
 
         fprintf(stdout, "%s%d bytes received:", prefix, bytes_read);
@@ -126,8 +126,7 @@ unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_
 }
 
 unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len) {
-    //unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
-    unsigned int bytes_sent = SSL_write(sslCmd, msg, msg_len);
+    unsigned int bytes_sent = SL_write(sslCmd, msg, msg_len);
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
     for (int i = 0; i < bytes_sent; i++) {
         fprintf(stdout, " 0x%X", msg[i]);
@@ -188,20 +187,21 @@ void *session_task(void *ssl) {
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
         if (should_quit == 1) {
+            //shutdown_socket("server", "client", client_sockfd);
+            //shutdown_socket("server", "image server", img_server_sockfd);
+            client_connected = 0;
             pthread_exit(NULL);
         }
     }
-    // On arrive jamais ici
-    //close(client_sockfd);
 }
 
 int server() {
     int server_sockfd = 0;
-   // int img_server_sockfd = 0;
-
+	SSL *sslCmd, *sslImg;
+	
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
-        fprintf(stderr, "[server] Could not create server socket\n");
+        fprintf(stderr, "[server] Could not create server socket: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
 
@@ -211,45 +211,44 @@ int server() {
         return EXIT_FAILURE;
     }
 
-    // TLS init
+	// Init TLS
     init_openssl();
     SSL_CTX *ctx = create_context();
     configure_context(ctx);
 
     while (1) {
         int client_sockfd = 0;
+        pthread_t img_t = 0; // pourquoi créé ici ? et pas comme session_t
         fprintf(stdout, "[server] Waiting for clients...\n");
         client_sockfd = accept_inet_stream_socket(server_sockfd, 0, 0, 0, 0, 0, 0);
         if (client_sockfd < 0) {
-            fprintf(stderr, "[server] Error on accept\n");
+            fprintf(stderr, "[server] Error on accept: %s\n", strerror(errno));
         } 
-        
-        // Create TLS socket for the commands
+		
+		 // Create TLS socket for the commands
         sslCmd = SSL_new(ctx);
         SSL_set_fd(sslCmd, client_sockfd);
-	SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
+		SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
 
-	// Create TLS socket for the images
+		// Create TLS socket for the images
         sslImg = SSL_new(ctx);
-
-	if (SSL_accept(sslCmd) <= 0){
-	    ERR_print_errors_fp(stderr);
-            fprintf(stderr, "[server] Error on ssl accept cmd");
-	    return EXIT_FAILURE;	
-	} else {
+		
+		else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
             pthread_create(&session_t, NULL, session_task, (void *) sslCmd);
-            pthread_t img_t;
             pthread_create(&img_t, NULL, img_task, (void *) sslImg);
-
-	    pthread_join(session_t, NULL);
+			
+			// Pourquoi pas de join? C moi qui les ai ajouté
+	        pthread_join(session_t, NULL);
             pthread_join(img_t, NULL);
-            shutdown_openssl();
-            close(client_sockfd);
-            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+			
+			shutdown_openssl(sslCmd, sslImg);
+			shutdown_socket("server", "client", client_sockfd);
+            shutdown_socket("server", "image server", img_server_sockfd);
         }
     }
-    SSL_CTX_free(ctx);
+	
+	SSL_CTX_free(ctx);
     cleanup_openssl();
 }

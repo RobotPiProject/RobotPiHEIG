@@ -113,40 +113,60 @@ void process_cmd(char *cmd, char *response) {
     put_response(response, response_code);
 }
 
+int shutdown_socket(char *prefix, char *sockdesc, int sockfd) {
+    fprintf(stdout, "[%s] Closing %s socket\n", prefix, sockdesc);
+    int ret = shutdown_inet_stream_socket(sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+    if (ret == -1) {
+        fprintf(stderr, "[%s] Error closing %s socket: %s\n", prefix, sockdesc, strerror(errno));
+    }
+    return ret;
+}
+
+int destroy_socket(char *prefix, char *sockdesc, int sockfd) {
+    fprintf(stdout, "[%s] Destroying %s socket\n", prefix, sockdesc);
+    int ret = destroy_inet_socket(sockfd);
+    if (ret == -1) {
+        fprintf(stderr, "[%s] Error destroying %s socket: %s\n", prefix, sockdesc, strerror(errno));
+    }
+    return ret;
+}
+
 /**
  * The thread that is started when the client requests a picture. Take a picture and send it to the client.
  * @param ptr not used
  */
 void *img_task(void *ptr) {
     SSL *sslImg = (SSL*) ptr;
+    int img_client_sockfd = 0;
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-
+	
     int img_server_sockfd = create_inet_server_socket("::", LISTENING_IMG_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (img_server_sockfd == -1) {
-        fprintf(stderr, "[pic] Could not create server socket\n");
+        fprintf(stderr, "[pic] Could not create server socket: %s\n", strerror(errno));
         pthread_exit(NULL);
     }
-
-    while (1) {
-        int img_client_sockfd = accept_inet_stream_socket(img_server_sockfd, 0, 0, 0, 0, 0, 0);
+    while(client_connected == 0); // ?? chelou
+    while (client_connected == 1) {
+        fprintf(stdout, "[pic] Waiting for clients...\n");
+        img_client_sockfd = accept_inet_stream_socket(img_server_sockfd, 0, 0, 0, 0, 0, 0);
         if (img_client_sockfd < 0) {
-            fprintf(stderr, "[pic] Could not create client socket\n");
-            shutdown_inet_stream_socket(*img_server_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+            fprintf(stderr, "[pic] Could not create client socket: %s\n", strerror(errno));
+            destroy_socket("pic", "image server", img_server_sockfd);
             pthread_exit(NULL);
-        }
-
-         // Init TLS
-         SSL_set_fd(sslImg, img_client_sockfd);
-         SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
-
-        if(SSL_accept(sslImg) <= 0){
-	    ERR_print_errors_fp(stderr);
+        } 
+		
+	    // Init TLS
+        SSL_set_fd(sslImg, img_client_sockfd);
+        SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
+		
+		if(SSL_accept(sslImg) <= 0){
+			ERR_print_errors_fp(stderr);
             fprintf(stderr, "[server] Error on ssl accept img");
-	    return EXIT_FAILURE;
-        } else {
+			pthread_exit(NULL);
+		} else {
             fprintf(stdout, "[pic] Connection established\n");
             read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
             fprintf(stdout, "[pic] Command received: %s\n", cmd);
@@ -191,9 +211,14 @@ void *img_task(void *ptr) {
                 fprintf(stderr, "Invalid Client response: %s\n", cmd);
             }
             fclose(file_handle);
-            shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+            shutdown_socket("pic", "image client", img_client_sockfd);
         }
     }
+    fprintf(stdout, "[pic] Client disconnected\n");
+    shutdown_socket("pic", "image client", img_client_sockfd);
+    shutdown_socket("pic", "image server", img_server_sockfd);
+    destroy_socket("pic", "image server", img_server_sockfd);
+    pthread_exit(NULL);
 }
 
 /**
