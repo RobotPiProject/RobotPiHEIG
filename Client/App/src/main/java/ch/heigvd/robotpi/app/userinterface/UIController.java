@@ -221,7 +221,7 @@ public class UIController {
                }
             } else {
                if (justDisconnected) {
-                  worker.setDisconnected();
+                  setDisconnected();
                   justDisconnected = false;
                }
             }
@@ -325,7 +325,7 @@ public class UIController {
             Util.createAlertFrame(Alert.AlertType.ERROR, "Error with the robot", "Error with the robot",
                                   "The robot had an issue while connecting to the client. Please restart the robot " +
                                   "then try again");
-            worker.setDisconnected();
+            setDisconnected();
          } catch (IOException | Client.IncorrectDeviceException e) {
             Util.createAlertFrame(Alert.AlertType.ERROR, "Wrong ip adress", "Wrong ip adress",
                                   "The ip adress you wrote does not coincide with that of a robot. Please check the " +
@@ -365,7 +365,7 @@ public class UIController {
       } finally {
          mutex.release();
       }
-      worker.setDisconnected();
+      setDisconnected();
 
    }
 
@@ -604,6 +604,11 @@ public class UIController {
       b.setGraphic(i);
    }
 
+   private void setDisconnected() {
+      LConnectionStatus.setText("Disconnected");
+      worker.setDisconnected();
+   }
+
    /**
     * The worker used to keep the connected RadioButton up to date
     */
@@ -642,7 +647,6 @@ public class UIController {
        */
       public void setDisconnected() {
          this.connected = false;
-         LConnectionStatus.setText("Disconnected");
       }
 
       @Override
@@ -724,7 +728,7 @@ public class UIController {
                                   "robot is fine then try again.");
          } finally {
             mutexPicture.release();
-            if (stream!=null){
+            if (stream != null) {
                try {
                   stream.close();
                } catch (IOException e) {
