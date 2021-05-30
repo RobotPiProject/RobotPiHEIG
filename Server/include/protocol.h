@@ -33,6 +33,6 @@
 void put_response(char *response, int response_code);
 void process_cmd(char *cmd, char *response);
 void *img_task(void *ptr);
-unsigned int send_picture(int sockfd, FILE *fp, char *buffer);
+unsigned int send_picture(SSL *ssl, FILE *fp, char *buffer);
 
 #endif

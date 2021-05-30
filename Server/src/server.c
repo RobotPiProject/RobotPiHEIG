@@ -6,10 +6,8 @@
 #include <openssl/bio.h>
 
 int client_connected = 0;
-SSL *sslCmd;
-SSL *sslImg;
 
-void InitializeSSL()
+void init_openssl()
 {
     // Provide human-readable error messages.
     SSL_load_error_strings();
@@ -19,13 +17,13 @@ void InitializeSSL()
 }
 
 
-void DestroySSL()
+void cleanup_openssl()
 {
     ERR_free_strings();
     EVP_cleanup();
 }
 
-void ShutdownSSL()
+void shutdown_openssl()
 {
     SSL_shutdown(sslCmd);
     SSL_free(sslCmd);
@@ -87,7 +85,7 @@ unsigned int prepare_response(char *response) {
  * @param buffer_size the size of the given character buffer
  * @return the total number of bytes that were received
  */
-unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t buffer_size) {
+unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size) {
     unsigned int bytes_read;
     int cmd_end = 0;
     unsigned int current_offet = 0;
@@ -130,7 +128,7 @@ unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t
     return total_bytes;
 }
 
-unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len) {
+unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len) {
     //unsigned int bytes_sent = send(sockfd, msg, msg_len, 0);
     unsigned int bytes_sent = SSL_write(sslCmd, msg, msg_len);
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent );
@@ -147,14 +145,14 @@ unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len) {
     return bytes_sent;
 }
 
-void *session_task(void *sockfd) {
-    int client_sockfd = *(int*) sockfd;
+void *session_task(void *ssl) {
+    SSL *sslCmd = (SSL*) ssl;
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
     while (1) {
-        unsigned int total_bytes = read_msg("[server] ", client_sockfd, buffer, cmd, BUFFER_SIZE);
+        unsigned int total_bytes = read_msg("[server] ", sslCmd, buffer, cmd, BUFFER_SIZE);
         fprintf(stdout, "[server] Command received: %s", cmd);
         for (int i = 0; i < total_bytes-1; i++) {
             fprintf(stdout, " 0x%X", cmd[i]);
@@ -189,19 +187,21 @@ void *session_task(void *sockfd) {
         fprintf(stdout, "[server] Sending message: %s\n", response);
 
         unsigned int res_len = prepare_response(response);
-        send_msg("[server] ", client_sockfd, response, res_len);
+        send_msg("[server] ", sslCmd, response, res_len);
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
         if (should_quit == 1) {
-            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
             pthread_exit(NULL);
         }
     }
-    close(client_sockfd);
+    // On arrive jamais ici
+    //close(client_sockfd);
 }
 
 int server() {
     int server_sockfd = 0;
+   // int img_server_sockfd = 0;
+
     server_sockfd = create_inet_server_socket("::", LISTENING_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (server_sockfd == -1) {
         fprintf(stderr, "[server] Could not create server socket\n");
@@ -215,7 +215,7 @@ int server() {
     }
 
     // TLS init
-    InitializeSSL();
+    init_openssl();
     SSL_CTX *ctx = create_context();
     configure_context(ctx);
 
@@ -228,29 +228,33 @@ int server() {
             fprintf(stderr, "[server] Error on accept\n");
         } 
         
-        // Start TLS connexion for the commands
+        // Create TLS socket for the commands
         sslCmd = SSL_new(ctx);
         SSL_set_fd(sslCmd, client_sockfd);
 	SSL_set_mode(sslCmd, SSL_MODE_AUTO_RETRY);
 
-	// Start TLS connexion for the images
+	// Create TLS socket for the images
         sslImg = SSL_new(ctx);
-        SSL_set_fd(sslImg, img_server_sockfd);
-	SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
 
 	if (SSL_accept(sslCmd) <= 0){
-	    ERR_print_errors_fp(stderr);  // !!!!!! MSg et gestion des ereur !!!!!!!!
-            fprintf(stderr, "erreur sur sslCmd");
-	    return EXIT_FAILURE;	
-	} else if(SSL_accept(sslImg) <= 0){
-            fprintf(stderr, "erreur sur sslImg");
 	    ERR_print_errors_fp(stderr);
+            fprintf(stderr, "[server] Error on ssl accept cmd");
+	    return EXIT_FAILURE;	
 	} else {
             fprintf(stdout, "[server] Connection established\n");
             pthread_t session_t;
-            pthread_create(&session_t, NULL, session_task, (void *) &client_sockfd);
+            pthread_create(&session_t, NULL, session_task, (void *) sslCmd);
             pthread_t img_t;
-            pthread_create(&img_t, NULL, img_task, (void *) &img_server_sockfd);
+            pthread_create(&img_t, NULL, img_task, (void *) sslImg);
+
+	    pthread_join(session_t, NULL);
+            pthread_join(img_t, NULL);
+            shutdown_openssl();
+            close(client_sockfd);
+            close(img_server_sockfd);
+            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
         }
     }
+    SSL_CTX_free(ctx);
+    cleanup_openssl();
 }

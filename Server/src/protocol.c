@@ -1,6 +1,9 @@
 #include <protocol.h>
 #include <motor.h>
 #include <camera.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
 
 extern int client_connected;
 
@@ -118,68 +121,82 @@ void process_cmd(char *cmd, char *response) {
  * @param ptr not used
  */
 void *img_task(void *ptr) {
-    int *img_server_sockfd = (int*) ptr;
+    SSL *sslImg = (SSL*) ptr;
     char buffer[BUFFER_SIZE], cmd[CMD_LEN], response[CMD_LEN];
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-    *img_server_sockfd = create_inet_server_socket("::", LISTENING_IMG_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
-    if (*img_server_sockfd == -1) {
+
+    int img_server_sockfd = create_inet_server_socket("::", LISTENING_IMG_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
+    if (img_server_sockfd == -1) {
         fprintf(stderr, "[pic] Could not create server socket\n");
         pthread_exit(NULL);
     }
+
     while (1) {
-        int img_client_sockfd = accept_inet_stream_socket(*img_server_sockfd, 0, 0, 0, 0, 0, 0);
+        int img_client_sockfd = accept_inet_stream_socket(img_server_sockfd, 0, 0, 0, 0, 0, 0);
         if (img_client_sockfd < 0) {
             fprintf(stderr, "[pic] Could not create client socket\n");
             shutdown_inet_stream_socket(*img_server_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
             pthread_exit(NULL);
         }
-        fprintf(stdout, "[pic] Connection established\n");
-        read_msg("[pic] ", img_client_sockfd, buffer, cmd, BUFFER_SIZE);
-        fprintf(stdout, "[pic] Command received: %s\n", cmd);
-        if (strncmp(cmd, "PICTURE", CMD_LEN) != 0) {
-            fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
-            put_response(response, PICTURE_ERR);
-            unsigned int res_len = prepare_response(response);
-            send_msg("[pic] ", img_client_sockfd, response, res_len);
-            shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
-            continue;
+
+         // Init TLS
+         SSL_set_fd(sslImg, img_client_sockfd);
+         SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
+
+        if(SSL_accept(sslImg) <= 0){
+	    ERR_print_errors_fp(stderr);
+            fprintf(stderr, "[server] Error on ssl accept img");
+	    return EXIT_FAILURE;
         } else {
-            if (client_connected == 1) {
-                put_response(response, PICTURE_OK);
-                unsigned int res_len = prepare_response(response);
-                fprintf(stdout, "Sending message: %s\n", response);
-                send_msg("[pic] ", img_client_sockfd, response, res_len);
-            } else {
+            fprintf(stdout, "[pic] Connection established\n");
+            read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
+            fprintf(stdout, "[pic] Command received: %s\n", cmd);
+            if (strncmp(cmd, "PICTURE", CMD_LEN) != 0) {
+                fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
                 put_response(response, PICTURE_ERR);
                 unsigned int res_len = prepare_response(response);
-                send_msg("[pic] ", img_client_sockfd, response, res_len);
-                shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+                send_msg("[pic] ", sslImg, response, res_len);
+                // a voir avec openssl
+                //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
+            } else {
+                if (client_connected == 1) {
+                    put_response(response, PICTURE_OK);
+                    unsigned int res_len = prepare_response(response);
+                    fprintf(stdout, "Sending message: %s\n", response);
+                    send_msg("[pic] ", sslImg, response, res_len);
+                } else {
+                    put_response(response, PICTURE_ERR);
+                    unsigned int res_len = prepare_response(response);
+                    send_msg("[pic] ", sslImg, response, res_len);
+                    //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+                    continue;
+                }
             }
-        }
-        /* start sending image */
-        camSnap("/home/pi", "pic");
-        char *fname = "/home/pi/pic.jpg";
-        FILE *file_handle = fopen(fname, "r");
-        send_picture(img_client_sockfd, file_handle, buffer);
-        explicit_bzero(cmd, CMD_LEN);
-        read_msg("[pic] ", img_client_sockfd, buffer, cmd, BUFFER_SIZE);
-        fprintf(stdout, "[pic] Message received: %s\n", cmd);
-        while (strncmp(cmd, "RESEND_PICTURE", CMD_LEN) == 0) {
-            send_picture(img_client_sockfd, file_handle, buffer);
+            /* start sending image */
+            camSnap("/home/pi", "pic");
+            char *fname = "/home/pi/pic.jpg";
+            FILE *file_handle = fopen(fname, "r");
+            send_picture(sslImg, file_handle, buffer);
             explicit_bzero(cmd, CMD_LEN);
-            read_msg("[pic] ", img_client_sockfd, buffer, cmd, BUFFER_SIZE);
+            read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
             fprintf(stdout, "[pic] Message received: %s\n", cmd);
+            while (strncmp(cmd, "RESEND_PICTURE", CMD_LEN) == 0) {
+                send_picture(sslImg, file_handle, buffer);
+                explicit_bzero(cmd, CMD_LEN);
+                read_msg("[pic] ", sslimg, buffer, cmd, BUFFER_SIZE);
+                fprintf(stdout, "[pic] Message received: %s\n", cmd);
+            }
+            if (strncmp(cmd, "RECEIVED_OK", CMD_LEN) == 0) {
+                fprintf(stdout, "Client received picture at %s\n", fname);
+            } else {
+                fprintf(stderr, "Invalid Client response: %s\n", cmd);
+            }
+            fclose(file_handle);
+            //shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
         }
-        if (strncmp(cmd, "RECEIVED_OK", CMD_LEN) == 0) {
-            fprintf(stdout, "Client received picture at %s\n", fname);
-        } else {
-            fprintf(stderr, "Invalid Client response: %s\n", cmd);
-        }
-        fclose(file_handle);
-        shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
     }
 }
 
@@ -190,7 +207,7 @@ void *img_task(void *ptr) {
  * @param buffer the buffer to use when sending the picture through the socket
  * @return the total number of bytes that were sent
  */
-unsigned int send_picture(int sockfd, FILE *fp, char *buffer) {
+unsigned int send_picture(SSL *sslImg, FILE *fp, char *buffer) {
     fseek(fp, 0, SEEK_END);
     unsigned long filesize = ftell(fp);
     rewind(fp);
@@ -201,12 +218,12 @@ unsigned int send_picture(int sockfd, FILE *fp, char *buffer) {
     explicit_bzero(buffer, BUFFER_SIZE);
     for (int i = 0; i < nb_chunks; i++) {
         fread(buffer, sizeof(char), BUFFER_SIZE, fp);
-        total_bytes_sent += send_msg("[pic] ", sockfd, buffer, BUFFER_SIZE);
+        total_bytes_sent += send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE);
     }
     if (rem > 0) {
         explicit_bzero(buffer, BUFFER_SIZE);
         fread(buffer, sizeof(char), rem, fp);
-        bytes_sent = send_msg("[pic] ", sockfd, buffer, BUFFER_SIZE);
+        bytes_sent = send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE);
         total_bytes_sent += bytes_sent;
     }
     fprintf(stdout,"[pic] Sent %d picture bytes\n", total_bytes_sent);
