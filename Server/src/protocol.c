@@ -233,7 +233,7 @@ unsigned int send_picture(int sockfd, FILE *fp, char *buffer) {
     if (rem > 0) {
         explicit_bzero(buffer, BUFFER_SIZE);
         fread(buffer, sizeof(char), rem, fp);
-        bytes_sent = send_msg("[pic] ", sockfd, buffer, BUFFER_SIZE);
+        bytes_sent = send_msg("[pic] ", sockfd, buffer, rem);
         total_bytes_sent += bytes_sent;
     }
     fprintf(stdout,"[pic] Sent %d picture bytes\n", total_bytes_sent);
