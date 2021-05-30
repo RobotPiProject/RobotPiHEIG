@@ -179,7 +179,10 @@ void *img_task(void *ptr) {
             fprintf(stderr, "Invalid Client response: %s\n", cmd);
         }
         fclose(file_handle);
-        shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+        fprintf(stdout, "[pic] Closing image client socket\n");
+        if (shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ) == -1) {
+            fprintf(stderr, "[pic] Error closing image client socket\n");
+        }
     }
 }
 

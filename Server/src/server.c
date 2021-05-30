@@ -129,11 +129,13 @@ void *session_task(void *sockfd) {
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
         if (should_quit == 1) {
-            shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
+            fprintf(stdout, "[server] Closing client socket\n");
+            if (shutdown_inet_stream_socket(client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ) == -1) {
+                fprintf(stderr, "[server] Error closing client socket\n");
+            }
             pthread_exit(NULL);
         }
     }
-    close(client_sockfd);
 }
 
 int server() {
