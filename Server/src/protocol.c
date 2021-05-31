@@ -158,9 +158,6 @@ void *img_task(void *ptr) {
             pthread_exit(NULL);
         }
 
-	    // Init TLS
-        }
-
 	    // re-init TLS for every new connexion
         SSL_CTX *ctx = create_context();
         configure_context(ctx);
