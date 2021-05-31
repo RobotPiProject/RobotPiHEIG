@@ -185,22 +185,9 @@ void *img_task(void *ptr) {
             char *fname = "/home/pi/pic.jpg";
             FILE *file_handle = fopen(fname, "r");
             send_picture(img_client_sockfd, file_handle, buffer);
-            explicit_bzero(cmd, CMD_LEN);
-            read_msg("[pic] ", img_client_sockfd, buffer, cmd, BUFFER_SIZE);
-            fprintf(stdout, "[pic] Message received: %s\n", cmd);
-            while (strncmp(cmd, "RESEND_PICTURE", CMD_LEN) == 0) {
-                send_picture(img_client_sockfd, file_handle, buffer);
-                explicit_bzero(cmd, CMD_LEN);
-                read_msg("[pic] ", img_client_sockfd, buffer, cmd, BUFFER_SIZE);
-                fprintf(stdout, "[pic] Message received: %s\n", cmd);
-            }
-            if (strncmp(cmd, "RECEIVED_OK", CMD_LEN) == 0) {
-                fprintf(stdout, "Client received picture at %s\n", fname);
-            } else {
-                fprintf(stderr, "Invalid Client response: %s\n", cmd);
-            }
             fclose(file_handle);
             shutdown_socket("pic", "image client", img_client_sockfd);
+            explicit_bzero(cmd, CMD_LEN);
         }
     }
     fprintf(stdout, "[pic] Client disconnected\n");
