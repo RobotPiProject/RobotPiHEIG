@@ -1,3 +1,8 @@
+/*
+ * @File Client.java
+ * @Authors : Jade Gröli
+ * @Date 18 mars 2021
+ */
 package ch.heigvd.robotpi.app.communication;
 
 import lombok.Getter;
@@ -37,6 +42,7 @@ public class Client {
     * Connects the client to the server of the pi robot
     *
     * @param ip l'adresse ip du robot pi
+    *
     * @throws CantConnectException     , connexion didn't work on server side
     * @throws IOException              problem with socket on client side
     * @throws IncorrectDeviceException ip address does not match a pi robot
@@ -63,6 +69,7 @@ public class Client {
     * Sends a request to the server to fetch a picture taken by the pi robot
     *
     * @param imagename the path of the image
+    *
     * @throws CantConnectException connexion didn't work on server side
     * @throws IOException          problem with socket on client side
     * @throws RobotException       an error on pi robot side occurred
@@ -110,6 +117,7 @@ public class Client {
     * Launch service discovery set.
     *
     * @return the set of ip addresses discovered
+    *
     * @throws InterruptedException the interrupted exception
     */
    public Set<String> launchServiceDiscovery() throws InterruptedException {
@@ -289,7 +297,7 @@ public class Client {
     * @throws RobotException       the robot exception
     * @throws CantConnectException the cant connect exception
     */
-//TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
+   //TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
    public void goFrontLeft() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
