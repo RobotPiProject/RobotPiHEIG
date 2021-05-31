@@ -159,6 +159,12 @@ void *img_task(void *ptr) {
         }
 
 	    // Init TLS
+        }
+
+	    // re-init TLS for every new connexion
+        SSL_CTX *ctx = create_context();
+        configure_context(ctx);
+        sslImg = SSL_new(ctx);
         SSL_set_fd(sslImg, img_client_sockfd);
         SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
 
