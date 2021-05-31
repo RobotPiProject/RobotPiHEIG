@@ -14,8 +14,17 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The type Client.
+ */
 public class Client {
+   /**
+    * The Port uses for the communication.
+    */
    public final int PORT = 2025;
+   /**
+    * The Portpicture uses to transfer picture
+    */
    public final int PORTPICTURE = 2026;
    private Socket clientSocket;
    private String ipAddress;
@@ -25,11 +34,12 @@ public class Client {
    private boolean isMoving = false;
 
    /**
-    * @brief connecte le client au serveur du robot pi
+    * Connects the client to the server of the pi robot
+    *
     * @param ip l'adresse ip du robot pi
-    * @throws CantConnectException, la connection ne s'est pas faite correctement côté serveur
-    * @throws IOException problème avec le socket côté client
-    * @throws IncorrectDeviceException l'adresse ip ne correspond pas a un robot pi
+    * @throws CantConnectException     , connexion didn't work on server side
+    * @throws IOException              problem with socket on client side
+    * @throws IncorrectDeviceException ip address does not match a pi robot
     */
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
       clientSocket = new Socket(ip, PORT);
@@ -50,11 +60,12 @@ public class Client {
    }
 
    /**
-    * @brief envoie une requete vers le serveur pour recuperer une photo prise par le robot pi
-    * @param imagename, le nom ou le path de l'image
-    * @throws CantConnectException
-    * @throws IOException
-    * @throws RobotException, un erreur du coté du robot est survenue
+    * Sends a request to the server to fetch a picture taken by the pi robot
+    *
+    * @param imagename the path of the image
+    * @throws CantConnectException connexion didn't work on server side
+    * @throws IOException          problem with socket on client side
+    * @throws RobotException       an error on pi robot side occurred
     */
    public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
       if (!isConnected) {
@@ -95,6 +106,12 @@ public class Client {
 
    }
 
+   /**
+    * Launch service discovery set.
+    *
+    * @return the set of ip addresses discovered
+    * @throws InterruptedException the interrupted exception
+    */
    public Set<String> launchServiceDiscovery() throws InterruptedException {
       try {
          // Create a JmDNS instance
@@ -117,10 +134,20 @@ public class Client {
       return null;
    }
 
+   /**
+    * getter of boolean which indicates if the client is connected to the server of not
+    *
+    * @return true if it's connected, false if not
+    */
    public boolean isConnected() {
       return isConnected;
    }
 
+   /**
+    * Disconnect the client from the server
+    *
+    * @throws IOException the io exception
+    */
    public void disconnect() throws IOException {
       int count = 1;
       String message;
@@ -140,6 +167,12 @@ public class Client {
 
    //TODO catch les ioException et throw les bonnes exc
 
+   /**
+    * Ping the server and expects an answer.
+    *
+    * @throws IOException             the io exception
+    * @throws LostConnectionException the connexion is lost
+    */
    public void ping() throws IOException, LostConnectionException {
       out.print("PING\n");
       out.flush();
@@ -154,6 +187,13 @@ public class Client {
 
    //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
+   /**
+    * Go forward.
+    *
+    * @throws RobotException       the robot exception
+    * @throws IOException          the io exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goForward() throws RobotException, IOException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -166,6 +206,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go backward.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goBackward() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -178,6 +225,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go left.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goLeft() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -190,6 +244,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go right.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goRight() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -202,6 +263,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Stop.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void stop() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -214,7 +282,14 @@ public class Client {
       isMoving = false;
    }
 
-   //TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
+   /**
+    * Go front left.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
+//TODO : a voir avec le protocole pour ces méthodes et la classe interne d'erreur
    public void goFrontLeft() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -227,6 +302,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go front right.
+    *
+    * @throws RobotException       the robot exception
+    * @throws IOException          the io exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goFrontRight() throws RobotException, IOException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -239,6 +321,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go backwards right.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goBackwardsRight() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -251,6 +340,13 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Go backwards left.
+    *
+    * @throws IOException          the io exception
+    * @throws RobotException       the robot exception
+    * @throws CantConnectException the cant connect exception
+    */
    public void goBackwardsLeft() throws IOException, RobotException, CantConnectException {
       if (!isConnected) {
          throw new CantConnectException();
@@ -263,24 +359,44 @@ public class Client {
       isMoving = true;
    }
 
+   /**
+    * Is moving boolean.
+    *
+    * @return the boolean
+    */
    public boolean isMoving() {
       return isMoving;
    }
 
+   /**
+    * The type Comm exception.
+    */
    public class CommException extends Exception {}
 
+   /**
+    * The type Cant connect exception.
+    */
    public class CantConnectException extends CommException {
       // pb connexion en general
    }
 
+   /**
+    * The type Incorrect device exception.
+    */
    public class IncorrectDeviceException extends CommException {
       // qqn avec IP mais pas Robot pi
    }
 
+   /**
+    * The type Lost connection exception.
+    */
    public class LostConnectionException extends CommException {
       //pb ping connexion
    }
 
+   /**
+    * The type Robot exception.
+    */
    public class RobotException extends CommException {
       // par ex si robot envoi mauvaise reponse, pb cote robot en general
    }
