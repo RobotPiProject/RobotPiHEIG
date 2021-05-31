@@ -142,7 +142,7 @@ void *img_task(void *ptr) {
     explicit_bzero(buffer, BUFFER_SIZE);
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(response, CMD_LEN);
-	
+
     int img_server_sockfd = create_inet_server_socket("::", LISTENING_IMG_PORT, LIBSOCKET_TCP, LIBSOCKET_BOTH, 0);
     if (img_server_sockfd == -1) {
         fprintf(stderr, "[pic] Could not create server socket: %s\n", strerror(errno));
@@ -156,12 +156,12 @@ void *img_task(void *ptr) {
             fprintf(stderr, "[pic] Could not create client socket: %s\n", strerror(errno));
             destroy_socket("pic", "image server", img_server_sockfd);
             pthread_exit(NULL);
-        } 
-		
+        }
+
 	    // Init TLS
         SSL_set_fd(sslImg, img_client_sockfd);
         SSL_set_mode(sslImg, SSL_MODE_AUTO_RETRY);
-		
+
 		if(SSL_accept(sslImg) <= 0){
 			ERR_print_errors_fp(stderr);
             fprintf(stderr, "[server] Error on ssl accept img");
@@ -197,21 +197,10 @@ void *img_task(void *ptr) {
             FILE *file_handle = fopen(fname, "r");
             send_picture(sslImg, file_handle, buffer);
             explicit_bzero(cmd, CMD_LEN);
-            read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
-            fprintf(stdout, "[pic] Message received: %s\n", cmd);
-            while (strncmp(cmd, "RESEND_PICTURE", CMD_LEN) == 0) {
-                send_picture(sslImg, file_handle, buffer);
-                explicit_bzero(cmd, CMD_LEN);
-                read_msg("[pic] ", sslImg, buffer, cmd, BUFFER_SIZE);
-                fprintf(stdout, "[pic] Message received: %s\n", cmd);
-            }
-            if (strncmp(cmd, "RECEIVED_OK", CMD_LEN) == 0) {
-                fprintf(stdout, "Client received picture at %s\n", fname);
-            } else {
-                fprintf(stderr, "Invalid Client response: %s\n", cmd);
-            }
+
             fclose(file_handle);
             shutdown_socket("pic", "image client", img_client_sockfd);
+            explicit_bzero(cmd, CMD_LEN);
         }
     }
     fprintf(stdout, "[pic] Client disconnected\n");
