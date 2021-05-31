@@ -13,10 +13,12 @@
 #include <libinetsocket.h>
 
 #define LISTENING_PORT "2025"
-#define MAX_TCP_SESSIONS 4
 #define BUFFER_SIZE 32
 
 int server();
-void *session_task(void *ptr);
+void *session_task(void *sockfd);
+unsigned int read_msg(char *prefix, int sockfd, char *buffer, char *dest, size_t buffer_size);
+unsigned int send_msg(char *prefix, int sockfd, char *msg, size_t msg_len);
+unsigned int prepare_response(char *response);
 
 #endif

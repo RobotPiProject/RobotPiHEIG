@@ -28,6 +28,7 @@
           <Menu mnemonicParsing="false" text="Edit">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#connectButtonPressed" text="Connect" />
+                  <MenuItem mnemonicParsing="false" onAction="#disconnectButtonPressed" text="Disconnect" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
@@ -46,26 +47,35 @@
                   <ImageView fx:id="imageView" fitHeight="655.0" fitWidth="610.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="0.20000000000004547" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.39999999999997726" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
-            <SplitPane dividerPositions="0.09961190168175937, 0.6636481241914618" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="600.0" prefWidth="338.0">
+            <SplitPane dividerPositions="0.2687022900763359" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="600.0" prefWidth="338.0">
                <items>
-                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="338.0">
+                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="190.0" prefWidth="338.0">
                     <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="201.79991455078124" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="146.60008544921874" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="150.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="188.0" />
                     </columnConstraints>
                     <rowConstraints>
                       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Button mnemonicParsing="false" onAction="#connectButtonPressed" text="Connect" GridPane.halignment="CENTER" />
-                        <Label fx:id="LConnectionStatus" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="27.0" prefWidth="120.0" text="Disconnected" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button mnemonicParsing="false" onAction="#connectButtonPressed" text="Connect" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
+                        <Label fx:id="LConnectionStatus" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="27.0" prefWidth="120.0" text="Disconnected" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="14.0" />
                            </font>
                         </Label>
+                        <Label text="Connection address" textAlignment="CENTER" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                        <TextField fx:id="TFConnectionAddress" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <GridPane.margin>
+                              <Insets left="10.0" right="10.0" />
+                           </GridPane.margin></TextField>
+                        <Label prefHeight="19.0" prefWidth="95.0" text="Discover near you" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+                        <Button mnemonicParsing="false" onAction="#openDiscoverWindow" text="Discover" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
                      </children>
                   </GridPane>
-                  <GridPane alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="466.0" prefWidth="338.0">
+                  <GridPane alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="410.0" prefWidth="338.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -78,7 +88,7 @@
                       <RowConstraints maxHeight="138.0" minHeight="67.0" prefHeight="138.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Label text="Controls" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Label prefHeight="19.0" prefWidth="52.0" text="Controls" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="14.0" />
                            </font>
@@ -92,27 +102,6 @@
                         <Button fx:id="BBackwardsLeft" mnemonicParsing="false" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                         <Button fx:id="BBackwards" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                         <Button fx:id="BBackwardsRight" mnemonicParsing="false" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
-                     </children>
-                  </GridPane>
-                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="338.0">
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="114.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="235.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="30.0" prefHeight="81.0" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="60.0" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefHeight="60.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="Settings" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                        <Label text="Connection address" textAlignment="CENTER" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
-                        <TextField fx:id="TFConnectionAddress" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                           <GridPane.margin>
-                              <Insets left="10.0" right="10.0" />
-                           </GridPane.margin></TextField>
-                        <Label text="Discover near you" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-                        <Button mnemonicParsing="false" onAction="#openDiscoverWindow" text="Discover" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
                      </children>
                   </GridPane>
                </items>

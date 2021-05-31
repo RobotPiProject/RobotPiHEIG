@@ -10,10 +10,7 @@ Taches:
 -Gérer la caméra:camera
 */
 
-#include <stdio.h>
-#include <init.h>
 #include <server.h>
-#include <sys/socket.h>
 
 int main() {
     server();    

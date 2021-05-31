@@ -3,7 +3,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
+#include <libinetsocket.h>
+#include <pthread.h>
+#include <server.h>
 
 #define CONN_OK 42
 #define CONN_ERR 43
@@ -20,11 +24,18 @@
 #define BCK_R_OK 54
 #define CMD_ERR 55
 #define PING 56
+#define PICTURE_OK 57
+#define PICTURE_ERR 58
 
 #define CMD_LEN 16
 
-void put_response(char *response, int response_code);
+#define LISTENING_IMG_PORT "2026"
 
-int process_cmd(char *cmd, char *response);
+void put_response(char *response, int response_code);
+void process_cmd(char *cmd, char *response);
+int shutdown_socket(char *prefix, char *sockdesc, int sockfd);
+int destroy_socket(char *prefix, char *sockdesc, int sockfd);
+void *img_task(void *ptr);
+unsigned int send_picture(int sockfd, FILE *fp, char *buffer);
 
 #endif

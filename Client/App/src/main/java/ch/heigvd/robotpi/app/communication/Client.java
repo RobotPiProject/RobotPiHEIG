@@ -74,7 +74,7 @@ public class Client {
     * @throws IOException          problem with socket on client side
     * @throws RobotException       an error on pi robot side occurred
     */
-   public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
+   public void takePicture(String imagename) throws CantConnectException, RobotException, PictureTransferError, IOException {
       if (!isConnected) {
          throw new CantConnectException();
       }
@@ -93,18 +93,13 @@ public class Client {
       }
 
       InputStream is = socketPicture.getInputStream();
-      BufferedImage bi;
 
-      while (true) {
-         try {
-            bi = ImageIO.read(is);
-            outPic.print("RECEIVED_OK\n");
-            outPic.flush();
-            break;
-         } catch (IOException e) {
-            outPic.print("RESEND_PICTURE\n");
-            outPic.flush();
-         }
+
+      BufferedImage bi;
+      try {
+         bi = ImageIO.read(is);
+      } catch (IOException e) {
+         throw new PictureTransferError();
       }
 
       socketPicture.close();
@@ -131,6 +126,9 @@ public class Client {
 
          // Wait a bit
          Thread.sleep(3000);
+
+         jmdns.removeServiceListener("_robopi._tcp.local.",sampleListener);
+         jmdns.close();
 
          return sampleListener.getAddresses();
 
@@ -406,7 +404,11 @@ public class Client {
     * The type Robot exception.
     */
    public class RobotException extends CommException {
-      // par ex si robot envoi mauvaise reponse, pb cote robot en general
+      // par ex si robot envoi mauvaise réponse, pb cote robot en general
+   }
+
+   public class PictureTransferError extends CommException {
+      // la photo n'a pas été reçue côté client, l'utilisateur doit la redemander
    }
 
 

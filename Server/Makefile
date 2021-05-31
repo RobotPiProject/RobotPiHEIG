@@ -11,15 +11,30 @@ BUILDTOOLS = $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN)
 CC = gcc
 LD = ld
 AR = ar
-CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR)
+CFLAGS = -g -Wall -I$(HEADERS) -I$(INCLUDE_DIR) $(TESTING)
 LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket
-TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lcmocka
+TEST_SERVER_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835 -lsocket -l:$(CMOCKA_STATIC) \
+					  -Wl,--wrap=runForward \
+					  -Wl,--wrap=runBackward \
+					  -Wl,--wrap=setMotor \
+					  -Wl,--wrap=turnRightF \
+					  -Wl,--wrap=turnLeftF \
+					  -Wl,--wrap=turnRightB \
+					  -Wl,--wrap=turnLeftB \
+					  -Wl,--wrap=rotateRight \
+					  -Wl,--wrap=rotateLeft \
+					  -Wl,--wrap=idle \
+					  -Wl,--wrap=motorInit \
+					  -Wl,--wrap=motorQuit
+
+TEST_SERVER_CFLAGS = -I$(HEADERS) -I$(INCLUDE_DIR)
 TEST_ROBOT_LDFLAGS = -lc -pthread -lm -lMotor -lbcm2835
 ARFLAGS = -crs
 APPNAME = RoboPiServer
 TEST_SERVER_APPNAME = serverTest
 TEST_ROBOT_APPNAME = robotTest
 LIBNAME = libMotor.a
+CMOCKA_STATIC = libcmocka-static.a
 
 SRC_DIR = src
 INCLUDE_DIR = include
@@ -40,12 +55,17 @@ DEPS = $(wildcard $(INCLUDE_DIR)/*.h)
 LIBSRCS = $(wildcard $(MOTORLIB_SRCDIR)/*.c)
 LIBOBJS = $(LIBSRCS:.c=.o)
 
+DISCOSERVICE = robopi-server.service
+
 .PHONY: clean
 .PHONY: install
 .PHONY: install_libs
 .PHONY: install_libMotor
 .PHONY: install_bcm2835
+.PHONY: install_libcmocka
+.PHONY: install_libsocket
 .PHONY: deploy
+.PHONY: deploy_discovery
 
 #4)
 all: app
@@ -56,8 +76,14 @@ $(OUT_DIR)/$(APPNAME): $(OBJS)
 	mkdir -p $(OUT_DIR)
 	$(BUILDTOOLS)-$(CC) $^ $(LDFLAGS) -o $@
 
-%.o: %.c $(DEPS)
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(CFLAGS)
+
+$(TEST_SERVER_SRC_DIR)/%.o: $(TEST_SERVER_SRC_DIR)/%.c
+	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(TEST_SERVER_CFLAGS)
+
+$(TEST_ROBOT_SRC_DIR)/%.o: $(TEST_ROBOT_SRC_DIR)/%.c
+	$(BUILDTOOLS)-$(CC) -o $@ -c $< $(TEST_SERVER_CFLAGS)
 
 test: test_server test_robot
 
@@ -65,10 +91,10 @@ test_server: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 
 test_robot: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 
-$(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS)
+$(OUT_DIR)/$(TEST_SERVER_APPNAME): $(TEST_SERVER_OBJS) $(SRC_DIR)/server.o $(SRC_DIR)/protocol.o $(SRC_DIR)/camera.o $(SRC_DIR)/motor.o
 	$(BUILDTOOLS)-$(CC) $^ $(TEST_SERVER_LDFLAGS) -o $@
 
-$(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o
+$(OUT_DIR)/$(TEST_ROBOT_APPNAME): $(TEST_ROBOT_OBJS) $(SRC_DIR)/motor.o $(SRC_DIR)/camera.o
 	$(BUILDTOOLS)-$(CC) $^ $(TEST_ROBOT_LDFLAGS) -o $@
 
 #2)
@@ -92,9 +118,7 @@ install_libMotor: lib
 	cp $(LIB_DIR)/$(LIBNAME) $(SYSLIBS)
 
 install_libcmocka:
-	cp $(LIB_DIR)/libcmocka.so.0.7.0 $(SYSLIBS)
-	ln -s -f $(SYSLIBS)/libcmocka.so.0.7.0 $(SYSLIBS)/libcmocka.so.0
-	ln -s -f $(SYSLIBS)/libcmocka.so.0 $(SYSLIBS)/libcmocka.so
+	cp $(LIB_DIR)/libcmocka-static.a $(SYSLIBS)
 	cp $(SRC_DIR)/cmocka/*.h $(HEADERS)/
 
 install_libsocket:
@@ -117,10 +141,14 @@ deploy_server_tests: $(OUT_DIR)/$(TEST_SERVER_APPNAME)
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_SERVER_APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_SERVER_APPNAME) $(PI_INSTALL_DIR)/$(TEST_SERVER_APPNAME)'
 
-deploy_robot_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
+deploy_motor_tests: $(OUT_DIR)/$(TEST_ROBOT_APPNAME)
 	scp $^ pi@$(PI_ADDR):/home/pi
 	ssh pi@$(PI_ADDR) 'sudo setcap cap_sys_rawio+ep $(TEST_ROBOT_APPNAME)'
 	ssh pi@$(PI_ADDR) 'sudo mv $(TEST_ROBOT_APPNAME) $(PI_INSTALL_DIR)/$(TEST_ROBOT_APPNAME)'
+
+deploy_discovery:
+	scp $(DISCOSERVICE) pi@$(PI_ADDR):/home/pi
+	ssh pi@$(PI_ADDR) 'sudo mv $(DISCOSERVICE) /etc/avahi/services/$(DISCOSERVICE)'
 
 clean:
 	rm -f $(SRC_DIR)/*.o

@@ -10,25 +10,30 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+typedef enum ImageFormat
+{
+   JPG, PNG
+}ImageFormat;
+
 typedef struct CamSettings
 {
    unsigned imageWidth;
    unsigned imageHeight;
+   ImageFormat format;
+   unsigned useBanner;
 } CamSettings;
 
 CamSettings getCamSettings();
 
-void setCamSettings(CamSettings);
+void setCamSettings(CamSettings newSettings);
 
 /**
- * @brief Takes a picture and stores it in the given folder
+ * @brief Takes a picture and stores it in the given folder with the given name
  * 
- * @param nameBuf Buffer for the name of the picture
- * @param nameSize Capacity of the buffer for the picture name
- * @param folderName Path of the folder used to store the future picture
- * @param folderNameSize Size of the path name
- * @return unsigned char Number of characters actually used for the name of the picture taken or 0 if there was an error
+ * @param name Name of the future picture file, without extension
+ * @param path Path to store the image into
+ * @return int 0 if no error was encountered, other value otherwise
  */
-unsigned char  camSnap(char *nameBuf, const unsigned char nameSize, const char *folderName, const unsigned char  folderNameSize);
+int camSnap(const char *path, const char *name);
 
 #endif
