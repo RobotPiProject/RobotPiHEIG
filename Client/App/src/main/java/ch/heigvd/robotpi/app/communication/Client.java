@@ -24,6 +24,13 @@ public class Client {
    private boolean isConnected;
    private boolean isMoving = false;
 
+   /**
+    * @brief connecte le client au serveur du robot pi
+    * @param ip l'adresse ip du robot pi
+    * @throws CantConnectException, la connection ne s'est pas faite correctement côté serveur
+    * @throws IOException problème avec le socket côté client
+    * @throws IncorrectDeviceException l'adresse ip ne correspond pas a un robot pi
+    */
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
       clientSocket = new Socket(ip, PORT);
       ipAddress = ip;
@@ -42,6 +49,13 @@ public class Client {
       }
    }
 
+   /**
+    * @brief envoie une requete vers le serveur pour recuperer une photo prise par le robot pi
+    * @param imagename, le nom ou le path de l'image
+    * @throws CantConnectException
+    * @throws IOException
+    * @throws RobotException, un erreur du coté du robot est survenue
+    */
    public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
       if (!isConnected) {
          throw new CantConnectException();
