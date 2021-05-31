@@ -42,7 +42,7 @@ public class Client {
       }
    }
 
-   public void takePicture(String imagename) throws CantConnectException, IOException, RobotException {
+   public void takePicture(String imagename) throws CantConnectException, RobotException, PictureTransferError, IOException {
       if (!isConnected) {
          throw new CantConnectException();
       }
@@ -61,18 +61,13 @@ public class Client {
       }
 
       InputStream is = socketPicture.getInputStream();
-      BufferedImage bi;
 
-      while (true) {
-         try {
-            bi = ImageIO.read(is);
-            outPic.print("RECEIVED_OK\n");
-            outPic.flush();
-            break;
-         } catch (IOException e) {
-            outPic.print("RESEND_PICTURE\n");
-            outPic.flush();
-         }
+
+      BufferedImage bi;
+      try {
+         bi = ImageIO.read(is);
+      } catch (IOException e) {
+         throw new PictureTransferError();
       }
 
       socketPicture.close();
@@ -271,7 +266,11 @@ public class Client {
    }
 
    public class RobotException extends CommException {
-      // par ex si robot envoi mauvaise reponse, pb cote robot en general
+      // par ex si robot envoi mauvaise réponse, pb cote robot en general
+   }
+
+   public class PictureTransferError extends CommException {
+      // la photo n'a pas été reçue côté client, l'utilisateur doit la redemander
    }
 
 
