@@ -119,7 +119,7 @@ void print_ssl_err(char *prefix, SSL *ssl, int retcode) {
  * @param buffer_size the size of the given character buffer
  * @return the total number of bytes that were received, -1 if there was an error
  */
-unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size)
+int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size)
 {
     int bytes_read;
     int cmd_end = 0;
@@ -200,7 +200,10 @@ void *session_task(void *ssl)
     explicit_bzero(response, CMD_LEN);
     while (1)
     {
-        unsigned int total_bytes = read_msg("[server] ", sslCmd, buffer, cmd, BUFFER_SIZE);
+        int total_bytes = read_msg("[server] ", sslCmd, buffer, cmd, BUFFER_SIZE);
+        if (total_bytes == -1) {
+            pthread_exit(NULL);
+        }
         fprintf(stdout, "[server] Command received: %s", cmd);
         for (int i = 0; i < total_bytes - 1; i++)
         {
