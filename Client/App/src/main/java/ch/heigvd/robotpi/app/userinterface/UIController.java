@@ -726,6 +726,10 @@ public class UIController {
                                   "The robot had an error while taking the picture",
                                   "There was an issue with the robot while taking a picture. Please check that the " +
                                   "robot is fine then try again.");
+         } catch (Client.PictureTransferError e) {
+            Util.createAlertFrame(Alert.AlertType.ERROR, "Error while receiving the picture",
+                                  "Error while receiving the picture",
+                                  "There was an error while receiving the picture. Please try taking a new one again.");
          } finally {
             mutexPicture.release();
             if (stream != null) {
