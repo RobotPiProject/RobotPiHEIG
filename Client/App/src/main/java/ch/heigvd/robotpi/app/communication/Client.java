@@ -28,8 +28,8 @@ public class Client {
    private boolean isMoving = false;
 
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
-        try (SSLSocket socket = createSocket(ip, PORT)) {
-            this.clientSocket = socket;
+        try{
+            this.clientSocket = createSocket(ip, PORT);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
@@ -54,7 +54,7 @@ public class Client {
             }
         } catch (IOException e) {
             System.err.println(e.toString());
-	    throw new CantConnectException();
+	        throw new CantConnectException();
         }
    }
 
