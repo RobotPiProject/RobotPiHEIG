@@ -102,7 +102,7 @@ unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_
         }
         if (bytes_read == 0)
         { // connection is closed
-            fprintf(stdout, "%sClient disconnected\n", prefix);
+            fprintf(stdout, "%sClient disconnected: %d\n", prefix, SSL_get_error(sslCmd, 0));
             return -1;
         }
 
