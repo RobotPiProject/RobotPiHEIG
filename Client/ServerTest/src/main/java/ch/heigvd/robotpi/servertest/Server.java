@@ -335,14 +335,10 @@ public class Server implements Runnable {
             if (serverType.equals("good")) {
                out.print("PICTURE_OK\n");
                out.flush();
-               String response;
-               do {
-                  LOG.log(Level.INFO, "Sending a picture...");
-                  BufferedImage bi = ImageIO.read(getClass().getClassLoader().getResource("logo.png"));
-                  ImageIO.write(bi, "png", imageOut);
-                  imageOut.flush();
-                  response = in.readLine();
-               } while (!response.equals("RECEIVED_OK"));
+               LOG.log(Level.INFO, "Sending a picture...");
+               BufferedImage bi = ImageIO.read(getClass().getClassLoader().getResource("logo.png"));
+               ImageIO.write(bi, "png", imageOut);
+               imageOut.flush();
             } else {
                out.print("PICTURE_KO\n");
                out.flush();
