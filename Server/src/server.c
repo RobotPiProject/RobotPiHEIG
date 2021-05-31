@@ -76,6 +76,40 @@ unsigned int prepare_response(char *response)
     return res_len;
 }
 
+void print_ssl_err(char *prefix, SSL *ssl, int retcode) {
+    int errcode = SSL_get_error(ssl, retcode);
+    switch (errcode) {
+        case SSL_ERROR_NONE:
+            fprintf(stderr, "[%s] SSL_ERROR_NONE\n", prefix);
+            break;
+        case SSL_ERROR_WANT_WRITE:
+            fprintf(stderr, "[%s] SSL_ERROR_WANT_WRITE\n", prefix);
+            break;
+        case SSL_ERROR_WANT_READ:
+            fprintf(stderr, "[%s] SSL_ERROR_WANT_READ\n", prefix);
+            break;
+        case SSL_ERROR_ZERO_RETURN:
+            fprintf(stderr, "[%s] SSL_ERROR_ZERO_RETURN\n", prefix);
+            break;
+        case SSL_ERROR_WANT_CONNECT:
+            fprintf(stderr, "[%s] SSL_ERROR_WANT_CONNECT\n", prefix);
+            break;
+        case SSL_ERROR_WANT_ACCEPT:
+            fprintf(stderr, "[%s] SSL_ERROR_WANT_ACCEPT\n", prefix);
+            break;
+        case SSL_ERROR_WANT_X509_LOOKUP:
+            fprintf(stderr, "[%s] SSL_ERROR_WANT_X509_LOOKUP\n", prefix);
+            break;
+        case SSL_ERROR_SYSCALL :
+            fprintf(stderr, "[%s] SSL_ERROR_SYSCALL \n", prefix);
+            break;
+        case SSL_ERROR_SSL:
+            // More info in the OpenSSL error queue
+            fprintf(stderr, "[%s] SSL_ERROR_SSL\n", prefix);
+            break;
+    }
+}
+
 /**
  * Read from the given socket until we come across a line-terminating character ('\n')
  * @param prefix a character prefix for the messages printed to the console, useful to determine from where the function was called
@@ -87,7 +121,7 @@ unsigned int prepare_response(char *response)
  */
 unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size)
 {
-    unsigned int bytes_read;
+    int bytes_read;
     int cmd_end = 0;
     unsigned int current_offet = 0;
     unsigned int total_bytes = 0;
@@ -98,11 +132,13 @@ unsigned int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_
         if (bytes_read < 0)
         {
             fprintf(stderr, "%sError reading socket\n", prefix);
+            print_ssl_err("server", sslCmd, bytes_read);
             return -1;
         }
         if (bytes_read == 0)
         { // connection is closed
-            fprintf(stdout, "%sClient disconnected: %d\n", prefix, SSL_get_error(sslCmd, 0));
+            fprintf(stderr, "%sClient disconnected: \n", prefix);
+            print_ssl_err("server", sslCmd, bytes_read);
             return -1;
         }
 
