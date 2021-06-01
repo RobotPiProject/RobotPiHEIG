@@ -52,6 +52,7 @@ public class Client {
     */
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
         try{
+           this.ipAddress = ip;
             this.clientSocket = createSocket(ip, PORT);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
