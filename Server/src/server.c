@@ -171,13 +171,15 @@ int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_
     return total_bytes;
 }
 
-unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len)
+unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len, short log_enable)
 {
     unsigned int bytes_sent = SSL_write(sslCmd, msg, msg_len);
     fprintf(stdout, "%s%d bytes sent\n", prefix, bytes_sent);
     for (int i = 0; i < bytes_sent; i++)
     {
-        fprintf(stdout, " 0x%X", msg[i]);
+        if (log_enable == 1) {
+            fprintf(stdout, " 0x%X", msg[i]);
+        }
     }
     fprintf(stdout, "\n");
     if (bytes_sent < 0)
@@ -252,7 +254,7 @@ void *session_task(void *ssl)
         fprintf(stdout, "[server] Sending message: %s\n", response);
 
         unsigned int res_len = prepare_response(response);
-        send_msg("[server] ", sslCmd, response, res_len);
+        send_msg("[server] ", sslCmd, response, res_len, 1);
         bzero(cmd, CMD_LEN);
         bzero(response, CMD_LEN);
         if (should_quit == 1)

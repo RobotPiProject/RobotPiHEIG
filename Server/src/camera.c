@@ -17,7 +17,7 @@ void setCamSettings(CamSettings newSettings)
 
 int camSnap(const char *path, const char *name)
 {
-   char command[256] = "fswebcam";
+   char command[256] = "fswebcam -S 2";
 
    //Set resolution
    char tmp[128];

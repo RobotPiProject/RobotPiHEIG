@@ -158,9 +158,6 @@ void *img_task(void *ptr) {
             pthread_exit(NULL);
         }
 
-	    // Init TLS
-        }
-
 	    // re-init TLS for every new connexion
         SSL_CTX *ctx = create_context();
         configure_context(ctx);
@@ -180,7 +177,7 @@ void *img_task(void *ptr) {
                 fprintf(stderr, "[pic] Invalid command: %s\n", cmd);
                 put_response(response, PICTURE_ERR);
                 unsigned int res_len = prepare_response(response);
-                send_msg("[pic] ", sslImg, response, res_len);
+                send_msg("[pic] ", sslImg, response, res_len, 1);
                 shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                 continue;
             } else {
@@ -188,11 +185,11 @@ void *img_task(void *ptr) {
                     put_response(response, PICTURE_OK);
                     unsigned int res_len = prepare_response(response);
                     fprintf(stdout, "Sending message: %s\n", response);
-                    send_msg("[pic] ", sslImg, response, res_len);
+                    send_msg("[pic] ", sslImg, response, res_len, 1);
                 } else {
                     put_response(response, PICTURE_ERR);
                     unsigned int res_len = prepare_response(response);
-                    send_msg("[pic] ", sslImg, response, res_len);
+                    send_msg("[pic] ", sslImg, response, res_len, 1);
                     shutdown_inet_stream_socket(img_client_sockfd, LIBSOCKET_WRITE | LIBSOCKET_READ);
                     continue;
                 }
@@ -234,12 +231,12 @@ unsigned int send_picture(SSL *sslImg, FILE *fp, char *buffer) {
     explicit_bzero(buffer, BUFFER_SIZE);
     for (int i = 0; i < nb_chunks; i++) {
         fread(buffer, sizeof(char), BUFFER_SIZE, fp);
-        total_bytes_sent += send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE);
+        total_bytes_sent += send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
     }
     if (rem > 0) {
         explicit_bzero(buffer, BUFFER_SIZE);
         fread(buffer, sizeof(char), rem, fp);
-        bytes_sent = send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE);
+        bytes_sent = send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
         total_bytes_sent += bytes_sent;
     }
     fprintf(stdout,"[pic] Sent %d picture bytes\n", total_bytes_sent);

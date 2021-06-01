@@ -21,7 +21,7 @@
 int server();
 void *session_task(void *sockfd);
 int read_msg(char *prefix, SSL *ssl, char *buffer, char *dest, size_t buffer_size);
-unsigned int send_msg(char *prefix, SSL *ssl, char *msg, size_t msg_len);
+unsigned int send_msg(char *prefix, SSL *ssl, char *msg, size_t msg_len, short log_enable);
 unsigned int prepare_response(char *response);
 void configure_context(SSL_CTX *ctx);
 SSL_CTX *create_context();
