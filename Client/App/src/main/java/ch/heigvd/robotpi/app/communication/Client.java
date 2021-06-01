@@ -18,6 +18,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
+import javax.net.ssl.*;
 
 /**
  * The type Client.
@@ -31,7 +32,9 @@ public class Client {
     * The Portpicture uses to transfer picture
     */
    public final int PORTPICTURE = 2026;
-   private Socket clientSocket;
+   private SSLSocket clientSocket = null;
+   private static final String[] protocols = new String[] {"TLSv1.3"};
+   private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    private String ipAddress;
    private PrintWriter out;
    private BufferedReader in;
@@ -48,22 +51,63 @@ public class Client {
     * @throws IncorrectDeviceException ip address does not match a pi robot
     */
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
-      clientSocket = new Socket(ip, PORT);
-      ipAddress = ip;
-      out = new PrintWriter(clientSocket.getOutputStream(), true);
-      in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      isConnected = true;
-      out.print("CONN\n");
-      out.flush();
-      String message = in.readLine();
-      if (message.equals("CONN_ERR")) {
-         clientSocket.close();
-         throw new CantConnectException();
-      } else if (!message.equals("CONN_OK")) {
-         clientSocket.close();
-         throw new IncorrectDeviceException();
-      }
+        try{
+           this.ipAddress = ip;
+            this.clientSocket = createSocket(ip, PORT);
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            printSocketInfo(clientSocket);
+            clientSocket.startHandshake();
+
+
+            isConnected = true;
+
+            out.print("CONN\n");
+            out.flush();
+
+            String message = in.readLine();
+
+
+            if (message.equals("CONN_ERR")) {
+                clientSocket.close();
+                throw new CantConnectException();
+            } else if (!message.equals("CONN_OK")) {
+                clientSocket.close();
+                throw new IncorrectDeviceException();
+            }
+        } catch (IOException e) {
+            System.err.println(e.toString());
+	        throw new CantConnectException();
+        }
    }
+
+    private static SSLSocket createSocket(String host, int port) throws IOException {
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault()
+                .createSocket(host, port);
+        socket.setEnabledProtocols(protocols);
+        socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+
+        return socket;
+    }
+
+
+    private static void printSocketInfo(SSLSocket s) {
+        System.out.println("Socket class: "+s.getClass());
+        System.out.println("   Remote address = "
+                +s.getInetAddress().toString());
+        System.out.println("   Remote port = "+s.getPort());
+        System.out.println("   Local socket address = "
+                +s.getLocalSocketAddress().toString());
+        System.out.println("   Local address = "
+                +s.getLocalAddress().toString());
+        System.out.println("   Local port = "+s.getLocalPort());
+        System.out.println("   Need client authentication = "
+                +s.getNeedClientAuth());
+        SSLSession ss = s.getSession();
+        System.out.println("   Cipher suite = "+ss.getCipherSuite());
+        System.out.println("   Protocol = "+ss.getProtocol());
+    }
 
    /**
     * Sends a request to the server to fetch a picture taken by the pi robot
@@ -79,18 +123,21 @@ public class Client {
          throw new CantConnectException();
       }
 
-      Socket socketPicture = new Socket(ipAddress, PORTPICTURE);
+        try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
 
-      PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
-      BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+            PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+            BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
-      outPic.print("PICTURE\n");
-      outPic.flush();
-      String message = inPic.readLine();
+            printSocketInfo(socketPicture);
+            socketPicture.startHandshake();
 
-      if (!message.equals("PICTURE_OK")) {
-         throw new RobotException();
-      }
+            outPic.print("PICTURE\n");
+            outPic.flush();
+            String message = inPic.readLine();
+
+            if (!message.equals("PICTURE_OK")) {
+                throw new RobotException();
+            }
 
       InputStream is = socketPicture.getInputStream();
 
@@ -102,9 +149,14 @@ public class Client {
          throw new PictureTransferError();
       }
 
-      socketPicture.close();
+            socketPicture.close();
 
-      ImageIO.write(bi, "jpg", new File(imagename));
+            ImageIO.write(bi, "jpg", new File(imagename));
+
+        } catch (IOException e){
+            System.err.println(e.toString());
+            throw new CantConnectException();
+        }
 
    }
 

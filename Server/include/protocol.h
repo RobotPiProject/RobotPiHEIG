@@ -8,6 +8,9 @@
 #include <libinetsocket.h>
 #include <pthread.h>
 #include <server.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
 
 #define CONN_OK 42
 #define CONN_ERR 43
@@ -36,6 +39,6 @@ void process_cmd(char *cmd, char *response);
 int shutdown_socket(char *prefix, char *sockdesc, int sockfd);
 int destroy_socket(char *prefix, char *sockdesc, int sockfd);
 void *img_task(void *ptr);
-unsigned int send_picture(int sockfd, FILE *fp, char *buffer);
+unsigned int send_picture(SSL *ssl, FILE *fp, char *buffer);
 
 #endif
