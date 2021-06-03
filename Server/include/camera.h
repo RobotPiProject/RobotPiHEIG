@@ -23,8 +23,16 @@ typedef struct CamSettings
    unsigned useBanner;
 } CamSettings;
 
+/**
+ * Get the current camera settings
+ * @return A CamSettings struct containing the camera settings
+ */
 CamSettings getCamSettings();
 
+/**
+ * Set the camera settings
+ * @param newSettings A CamSettings struct containing the camera settings
+ */
 void setCamSettings(CamSettings newSettings);
 
 /**
