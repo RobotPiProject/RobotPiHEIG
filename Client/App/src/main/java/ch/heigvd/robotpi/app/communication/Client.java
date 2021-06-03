@@ -5,25 +5,29 @@
  */
 package ch.heigvd.robotpi.app.communication;
 
+import ch.heigvd.robotpi.servertest.ProtocolCommands;
 import lombok.Getter;
 
 import javax.imageio.ImageIO;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
-import javax.net.ssl.*;
 
 /**
  * The type Client.
  */
 public class Client {
+   private static final String[] protocols = new String[]{"TLSv1.3"};
+   private static final String[] cipher_suites = new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    /**
     * The Port uses for the communication.
     */
@@ -33,8 +37,6 @@ public class Client {
     */
    public final int PORTPICTURE = 2026;
    private SSLSocket clientSocket = null;
-   private static final String[] protocols = new String[] {"TLSv1.3"};
-   private static final String[] cipher_suites = new String[] {"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    private String ipAddress;
    private PrintWriter out;
    private BufferedReader in;
@@ -51,63 +53,37 @@ public class Client {
     * @throws IncorrectDeviceException ip address does not match a pi robot
     */
    public void connect(String ip) throws CantConnectException, IOException, IncorrectDeviceException {
-        try{
-           this.ipAddress = ip;
-            this.clientSocket = createSocket(ip, PORT);
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+      try {
+         this.ipAddress = ip;
+         this.clientSocket = createSocket(ip, PORT);
+         out = new PrintWriter(clientSocket.getOutputStream(), true);
+         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-            printSocketInfo(clientSocket);
-            clientSocket.startHandshake();
-
-
-            isConnected = true;
-
-            out.print("CONN\n");
-            out.flush();
-
-            String message = in.readLine();
+         printSocketInfo(clientSocket);
+         clientSocket.startHandshake();
 
 
-            if (message.equals("CONN_ERR")) {
-                clientSocket.close();
-                throw new CantConnectException();
-            } else if (!message.equals("CONN_OK")) {
-                clientSocket.close();
-                throw new IncorrectDeviceException();
-            }
-        } catch (IOException e) {
-            System.err.println(e.toString());
-	        throw new CantConnectException();
-        }
+         isConnected = true;
+
+         out.print(ProtocolCommands.conn.getMessage());
+         out.print("\n");
+         out.flush();
+
+         String message = in.readLine();
+
+
+         if (message.equals("CONN_ERR")) {
+            clientSocket.close();
+            throw new CantConnectException();
+         } else if (!message.equals(ProtocolCommands.conn.getMessageConfirmation())) {
+            clientSocket.close();
+            throw new IncorrectDeviceException();
+         }
+      } catch (IOException e) {
+         System.err.println(e.toString());
+         throw new CantConnectException();
+      }
    }
-
-    private static SSLSocket createSocket(String host, int port) throws IOException {
-        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault()
-                .createSocket(host, port);
-        socket.setEnabledProtocols(protocols);
-        socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
-
-        return socket;
-    }
-
-
-    private static void printSocketInfo(SSLSocket s) {
-        System.out.println("Socket class: "+s.getClass());
-        System.out.println("   Remote address = "
-                +s.getInetAddress().toString());
-        System.out.println("   Remote port = "+s.getPort());
-        System.out.println("   Local socket address = "
-                +s.getLocalSocketAddress().toString());
-        System.out.println("   Local address = "
-                +s.getLocalAddress().toString());
-        System.out.println("   Local port = "+s.getLocalPort());
-        System.out.println("   Need client authentication = "
-                +s.getNeedClientAuth());
-        SSLSession ss = s.getSession();
-        System.out.println("   Cipher suite = "+ss.getCipherSuite());
-        System.out.println("   Protocol = "+ss.getProtocol());
-    }
 
    /**
     * Sends a request to the server to fetch a picture taken by the pi robot
@@ -118,45 +94,46 @@ public class Client {
     * @throws IOException          problem with socket on client side
     * @throws RobotException       an error on pi robot side occurred
     */
-   public void takePicture(String imagename) throws CantConnectException, RobotException, PictureTransferError, IOException {
+   public void takePicture(String imagename)
+           throws CantConnectException, RobotException, PictureTransferError, IOException {
       if (!isConnected) {
          throw new CantConnectException();
       }
 
-        try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
+      try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
 
-            PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
-            BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+         PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+         BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
-            printSocketInfo(socketPicture);
-            socketPicture.startHandshake();
+         printSocketInfo(socketPicture);
+         socketPicture.startHandshake();
 
-            outPic.print("PICTURE\n");
-            outPic.flush();
-            String message = inPic.readLine();
+         outPic.print("PICTURE\n");
+         outPic.flush();
+         String message = inPic.readLine();
 
-            if (!message.equals("PICTURE_OK")) {
-                throw new RobotException();
-            }
+         if (!message.equals("PICTURE_OK")) {
+            throw new RobotException();
+         }
 
-      InputStream is = socketPicture.getInputStream();
+         InputStream is = socketPicture.getInputStream();
 
 
-      BufferedImage bi;
-      try {
-         bi = ImageIO.read(is);
+         BufferedImage bi;
+         try {
+            bi = ImageIO.read(is);
+         } catch (IOException e) {
+            throw new PictureTransferError();
+         }
+
+         socketPicture.close();
+
+         ImageIO.write(bi, "jpg", new File(imagename));
+
       } catch (IOException e) {
-         throw new PictureTransferError();
+         System.err.println(e.toString());
+         throw new CantConnectException();
       }
-
-            socketPicture.close();
-
-            ImageIO.write(bi, "jpg", new File(imagename));
-
-        } catch (IOException e){
-            System.err.println(e.toString());
-            throw new CantConnectException();
-        }
 
    }
 
@@ -179,7 +156,7 @@ public class Client {
          // Wait a bit
          Thread.sleep(3000);
 
-         jmdns.removeServiceListener("_robopi._tcp.local.",sampleListener);
+         jmdns.removeServiceListener("_robopi._tcp.local.", sampleListener);
          jmdns.close();
 
          return sampleListener.getAddresses();
@@ -210,20 +187,19 @@ public class Client {
       int count = 1;
       String message;
       do {
-         out.print("DISCONN\n");
+         out.print(ProtocolCommands.disconnect.getMessage());
+         out.print("\n");
          out.flush();
          message = in.readLine();
-      } while (!message.equals("DISCONN_OK") && count++ != 5);
+      } while (!message.equals(ProtocolCommands.disconnect.getMessageConfirmation()) && count++ != 5);
       in.close();
       out.close();
       clientSocket.close();
-      if (message.equals("DISCONN_OK")) {
+      if (message.equals(ProtocolCommands.disconnect.getMessageConfirmation())) {
          isConnected = false;
       }
 
    }
-
-   //TODO catch les ioException et throw les bonnes exc
 
    /**
     * Ping the server and expects an answer.
@@ -232,9 +208,10 @@ public class Client {
     * @throws LostConnectionException the connexion is lost
     */
    public void ping() throws IOException, LostConnectionException {
-      out.print("PING\n");
+      out.print(ProtocolCommands.ping.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("PING")) {
+      if (!in.readLine().equals(ProtocolCommands.ping.getMessage())) {
          isConnected = false;
          in.close();
          out.close();
@@ -242,8 +219,6 @@ public class Client {
          throw new LostConnectionException();
       }
    }
-
-   //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
    /**
     * Go forward.
@@ -256,13 +231,16 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("FWD\n");
+      out.print(ProtocolCommands.forward.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("FWD_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.forward.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
    }
+
+   //TODO catch les ioException et throw les bonnes exc
 
    /**
     * Go backward.
@@ -275,13 +253,16 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("BKWD\n");
+      out.print(ProtocolCommands.backward.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("BKWD_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.backward.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
    }
+
+   //lancer des exception dans le cas ou serveur ne reagit pas comme prevu
 
    /**
     * Go left.
@@ -294,9 +275,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("ROTATE_LEFT\n");
+      out.print(ProtocolCommands.rotateLeft.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("ROTATE_LEFT_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.rotateLeft.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -313,9 +295,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("ROTATE_RIGHT\n");
+      out.print(ProtocolCommands.rotateRight.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("ROTATE_RIGHT_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.rotateRight.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -332,9 +315,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("STOP\n");
+      out.print(ProtocolCommands.stop.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("STOP_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.stop.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = false;
@@ -352,9 +336,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("FRONT_L\n");
+      out.print(ProtocolCommands.frontleft.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("FRONT_L_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.frontleft.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -371,9 +356,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("FRONT_R\n");
+      out.print(ProtocolCommands.frontRight.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("FRONT_R_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.frontRight.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -390,9 +376,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("BCK_R\n");
+      out.print(ProtocolCommands.backwardsRight.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("BCK_R_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.backwardsRight.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -409,9 +396,10 @@ public class Client {
       if (!isConnected) {
          throw new CantConnectException();
       }
-      out.print("BCK_L\n");
+      out.print(ProtocolCommands.backwardsLeft.getMessage());
+      out.print("\n");
       out.flush();
-      if (!in.readLine().equals("BCK_L_OK")) {
+      if (!in.readLine().equals(ProtocolCommands.backwardsLeft.getMessageConfirmation())) {
          throw new RobotException();
       }
       isMoving = true;
@@ -424,6 +412,27 @@ public class Client {
     */
    public boolean isMoving() {
       return isMoving;
+   }
+
+   private static SSLSocket createSocket(String host, int port) throws IOException {
+      SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(host, port);
+      socket.setEnabledProtocols(protocols);
+      socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+
+      return socket;
+   }
+
+   private static void printSocketInfo(SSLSocket s) {
+      System.out.println("Socket class: " + s.getClass());
+      System.out.println("   Remote address = " + s.getInetAddress().toString());
+      System.out.println("   Remote port = " + s.getPort());
+      System.out.println("   Local socket address = " + s.getLocalSocketAddress().toString());
+      System.out.println("   Local address = " + s.getLocalAddress().toString());
+      System.out.println("   Local port = " + s.getLocalPort());
+      System.out.println("   Need client authentication = " + s.getNeedClientAuth());
+      SSLSession ss = s.getSession();
+      System.out.println("   Cipher suite = " + ss.getCipherSuite());
+      System.out.println("   Protocol = " + ss.getProtocol());
    }
 
    /**
