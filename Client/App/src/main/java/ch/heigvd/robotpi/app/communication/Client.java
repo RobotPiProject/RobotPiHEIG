@@ -26,8 +26,8 @@ import java.util.Set;
  * The type Client.
  */
 public class Client {
-   private static final String[] protocols = new String[]{"TLSv1.3"};
-   private static final String[] cipher_suites = new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
+   private static final String[] PROTOCOLS = new String[]{"TLSv1.3"};
+   private static final String[] CIPHER_SUITES = new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    /**
     * The Port uses for the communication.
     */
@@ -416,7 +416,7 @@ public class Client {
 
    private static SSLSocket createSocket(String host, int port) throws IOException {
       SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(host, port);
-      socket.setEnabledProtocols(protocols);
+      socket.setEnabledProtocols(PROTOCOLS);
       socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
 
       return socket;
