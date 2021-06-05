@@ -10,9 +10,10 @@ import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.security.*;
-import java.security.cert.CertificateException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.*;
@@ -96,7 +97,7 @@ public class Server implements Runnable {
       SSLContext sslContext = initTLS();
       SSLServerSocketFactory serverSocketFactory = sslContext.getServerSocketFactory();
       SSLServerSocket socket = (SSLServerSocket) serverSocketFactory.createServerSocket(port);
-      
+
       socket.setEnabledProtocols(new String[]{"TLSv1.3"});
       socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
       socket.setNeedClientAuth(false);

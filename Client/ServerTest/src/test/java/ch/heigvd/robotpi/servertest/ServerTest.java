@@ -6,25 +6,68 @@ package ch.heigvd.robotpi.servertest;/*
 
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import javax.net.ssl.*;
+import java.io.*;
 import java.net.Socket;
+import java.security.KeyStore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ServerTest {/*
+class ServerTest {
 
-   private void closeEverything(Server server, Socket socket, BufferedReader in, PrintWriter out) throws IOException {
+   private void closeEverything(Server server, SSLSocket socket, BufferedReader in, PrintWriter out) throws IOException {
       socket.close();
       in.close();
       out.close();
       server.stopExecution();
    }
 
+   private SSLContext initTLS() throws Exception {
+            // TrustManagerFactory ()
+      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      String password = "robotpi";
+      TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      InputStream inputStream1 = getClass().getClassLoader().getResourceAsStream("rpTrustStore.jts");
+      trustStore.load(inputStream1, password.toCharArray());
+      trustManagerFactory.init(trustStore);
+      X509TrustManager x509TrustManager = null;
+
+      for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
+         if (trustManager instanceof X509TrustManager) {
+            x509TrustManager = (X509TrustManager) trustManager;
+            break;
+         }
+      }
+
+      if (x509TrustManager == null) throw new NullPointerException();
+
+      // set up the SSL Context
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, new TrustManager[]{x509TrustManager}, null);
+
+      return sslContext;
+   }
+
+    /**
+     * Create SSL socket
+     * @param host IP
+     * @param port port
+     * @return SSLSocket
+     * @throws IOException
+     */
+    private SSLSocket createSocket(String host, int port) throws Exception {
+       SSLContext sslContext = initTLS();
+       SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+       SSLSocket socket = (SSLSocket) socketFactory.createSocket(host, port);
+
+       socket.setEnabledProtocols(new String[]{"TLSv1.3"});
+       socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+
+        return socket;
+    }
+
    @Test
-   void testConnectionGoodServer() throws IOException {
+   void testConnectionGoodServer() throws Exception {
       Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
@@ -34,9 +77,12 @@ class ServerTest {/*
          e.printStackTrace();
       }
 
-      Socket socket = new Socket("localhost", 2025);
+      SSLSocket socket = createSocket("localhost", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+      socket.startHandshake();
+
       out.println(ProtocolCommands.conn.getMessage());
       assertEquals(ProtocolCommands.conn.getMessageConfirmation(), in.readLine());
 
@@ -44,7 +90,7 @@ class ServerTest {/*
    }
 
    @Test
-   void testCommandsWorksGoodServer() throws IOException {
+   void testCommandsWorksGoodServer() throws Exception {
       Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
@@ -54,9 +100,12 @@ class ServerTest {/*
          e.printStackTrace();
       }
 
-      Socket socket = new Socket("127.0.0.1", 2025);
+      SSLSocket socket = createSocket("localhost", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+      socket.startHandshake();
+
       out.println(ProtocolCommands.conn.getMessage());
       assertEquals(ProtocolCommands.conn.getMessageConfirmation(), in.readLine());
 
@@ -81,7 +130,7 @@ class ServerTest {/*
    }
 
    @Test
-   void testDisconnWorks() throws IOException {
+   void testDisconnWorks() throws Exception {
       Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
@@ -91,9 +140,12 @@ class ServerTest {/*
          e.printStackTrace();
       }
 
-      Socket socket = new Socket("127.0.0.1", 2025);
+      SSLSocket socket = createSocket("localhost", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+      socket.startHandshake();
+
       out.println(ProtocolCommands.conn.getMessage());
       assertEquals(ProtocolCommands.conn.getMessageConfirmation(), in.readLine());
 
@@ -104,9 +156,12 @@ class ServerTest {/*
       out.close();
       socket.close();
 
-      socket = new Socket("127.0.0.1", 2025);
+      socket = createSocket("localhost", 2025);
       in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       out = new PrintWriter(socket.getOutputStream(), true);
+
+      socket.startHandshake();
+
       out.println(ProtocolCommands.conn.getMessage());
       assertEquals(ProtocolCommands.conn.getMessageConfirmation(), in.readLine());
 
@@ -115,7 +170,7 @@ class ServerTest {/*
    }
 
    @Test
-   void testPingWorks() throws IOException {
+   void testPingWorks() throws Exception {
       Server server = new Server("good", true);
       Thread thread = new Thread(server);
       thread.start();
@@ -125,9 +180,12 @@ class ServerTest {/*
          e.printStackTrace();
       }
 
-      Socket socket = new Socket("127.0.0.1", 2025);
+      SSLSocket socket = createSocket("localhost", 2025);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+      socket.startHandshake();
+
       out.println(ProtocolCommands.conn.getMessage());
       assertEquals(ProtocolCommands.conn.getMessageConfirmation(), in.readLine());
 
@@ -135,5 +193,5 @@ class ServerTest {/*
       assertEquals(ProtocolCommands.ping.getMessageConfirmation(), in.readLine());
 
       closeEverything(server, socket, in, out);
-   }*/
+   }
 }

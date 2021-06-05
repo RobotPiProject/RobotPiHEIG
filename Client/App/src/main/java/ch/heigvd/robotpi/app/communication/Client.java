@@ -414,6 +414,13 @@ public class Client {
       return isMoving;
    }
 
+   /**
+    * Create SSL socket
+    * @param host IP
+    * @param port port
+    * @return SSLSocket
+    * @throws IOException
+    */
    private static SSLSocket createSocket(String host, int port) throws IOException {
       SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(host, port);
       socket.setEnabledProtocols(PROTOCOLS);
