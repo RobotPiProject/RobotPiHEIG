@@ -10,9 +10,13 @@ import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.security.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.*;
 
 /**
  * This class implements a single-threaded tcp server used to simulate a robopi. It can be used both for testing
@@ -26,8 +30,8 @@ public class Server implements Runnable {
    private final String JMDNS_SERVICE_NAME = "_robopi._tcp.local.";
    private final int PORT = 2025;
    private final String serverType;
-   private ServerSocket serverSocket;
-   private Socket clientSocket = null;
+   private SSLServerSocket serverSocket;
+   private SSLSocket clientSocket = null;
    private BufferedReader in = null;
    private PrintWriter out = null;
    private PictureServer pictureServer;
@@ -49,6 +53,58 @@ public class Server implements Runnable {
       this.testRun = testRun;
    }
 
+   /**
+    * Create the SSL context
+    * @return SSLContext
+    * @throws Exception
+    */
+   private SSLContext initTLS() throws Exception {
+      System.setProperty("javax.net.debug", "all");
+
+      // Get the keystore
+      System.setProperty("javax.net.debug", "all");
+      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      String password = "robotpi";
+      InputStream inputStream = getClass().getClassLoader().getResourceAsStream("rpKeyStore.jks");
+      keyStore.load(inputStream, password.toCharArray());
+
+      // KeyManagerFactory ()
+      KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509", "SunJSSE");
+      keyManagerFactory.init(keyStore, password.toCharArray());
+      X509KeyManager x509KeyManager = null;
+      for (KeyManager keyManager : keyManagerFactory.getKeyManagers()) {
+         if (keyManager instanceof X509KeyManager) {
+            x509KeyManager = (X509KeyManager) keyManager;
+            break;
+         }
+      }
+      if (x509KeyManager == null) throw new NullPointerException();
+
+      // set up the SSL Context
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(new KeyManager[]{x509KeyManager}, null, null);
+
+      return sslContext;
+   }
+
+   /**
+    * Create a TLS server socket
+    * @param port Port of the connexion
+    * @return SSL server socket
+    * @throws IOException
+    */
+   private SSLServerSocket createServerSocket(int port) throws Exception{
+      SSLContext sslContext = initTLS();
+      SSLServerSocketFactory serverSocketFactory = sslContext.getServerSocketFactory();
+      SSLServerSocket socket = (SSLServerSocket) serverSocketFactory.createServerSocket(port);
+
+      socket.setEnabledProtocols(new String[]{"TLSv1.3"});
+      socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
+      socket.setNeedClientAuth(false);
+      return socket;
+   }
+
+
    @Override
    public void run() {
       try {
@@ -65,10 +121,17 @@ public class Server implements Runnable {
     */
    public void start() throws IOException {
       LOG.log(Level.INFO, "Start {0} server ...", serverType);
-      serverSocket = new ServerSocket(PORT);
-      pictureServer = new PictureServer();
-      Thread pictureThread = new Thread(pictureServer);
-      pictureThread.start();
+
+      try {
+         serverSocket = createServerSocket(PORT);
+
+         pictureServer = new PictureServer();
+         Thread pictureThread = new Thread(pictureServer);
+         pictureThread.start();
+      } catch (Exception e){
+         System.out.println("--CASSE--");
+         // TODO throw exception
+      }
 
       try {
          // Create a JmDNS instance
@@ -103,7 +166,7 @@ public class Server implements Runnable {
       while (!stopRequested) {
          LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
          try {
-            clientSocket = serverSocket.accept();
+            clientSocket = (SSLSocket) serverSocket.accept();
          } catch (SocketException e) {
             return;
          }
@@ -259,8 +322,8 @@ public class Server implements Runnable {
    class PictureServer implements Runnable {
       final Logger LOG = Logger.getLogger(Server.class.getName());
       private final int PORT = 2026;
-      private ServerSocket serverSocket;
-      private Socket clientSocket = null;
+      private SSLServerSocket picServerSocket;
+      private SSLSocket picClientSocket = null;
       private BufferedReader in = null;
       private PrintWriter out = null;
       private BufferedOutputStream imageOut = null;
@@ -273,12 +336,12 @@ public class Server implements Runnable {
        */
       public void stop() throws IOException {
          LOG.log(Level.INFO, "Stop picture server ...");
-         if (clientSocket != null) {
-            clientSocket.close();
+         if (picClientSocket != null) {
+            picClientSocket.close();
             in.close();
             out.close();
          }
-         serverSocket.close();
+         picServerSocket.close();
          running = false;
       }
 
@@ -287,7 +350,7 @@ public class Server implements Runnable {
          try {
             this.start();
             this.listen();
-         } catch (IOException e) {
+         } catch (Exception e) {
             e.printStackTrace();
          }
       }
@@ -297,9 +360,9 @@ public class Server implements Runnable {
        *
        * @throws IOException the io exception
        */
-      private void start() throws IOException {
+      private void start() throws Exception {
          LOG.log(Level.INFO, "Start picture server ...");
-         serverSocket = new ServerSocket(PORT);
+         picServerSocket = createServerSocket(PORT);
       }
 
       /**
@@ -311,16 +374,16 @@ public class Server implements Runnable {
          while (true) {
             LOG.log(Level.INFO, "Waiting (blocking) for a new client on port {0}", PORT);
             try {
-               clientSocket = serverSocket.accept();
+               picClientSocket = (SSLSocket) picServerSocket.accept();
             } catch (SocketException e) {
 
             }
             if (!running) {
                break;
             }
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream());
-            imageOut = new BufferedOutputStream(clientSocket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(picClientSocket.getInputStream()));
+            out = new PrintWriter(picClientSocket.getOutputStream());
+            imageOut = new BufferedOutputStream(picClientSocket.getOutputStream());
             String message = in.readLine();
             LOG.log(Level.INFO, "Received first message from client {0}", message);
             if (!message.equals("PICTURE")) {
@@ -329,7 +392,7 @@ public class Server implements Runnable {
                in.close();
                out.close();
                imageOut.close();
-               clientSocket.close();
+               picClientSocket.close();
                continue;
             }
             if (serverType.equals("good")) {
@@ -346,7 +409,7 @@ public class Server implements Runnable {
             in.close();
             out.close();
             imageOut.close();
-            clientSocket.close();
+            picClientSocket.close();
          }
       }
    }
