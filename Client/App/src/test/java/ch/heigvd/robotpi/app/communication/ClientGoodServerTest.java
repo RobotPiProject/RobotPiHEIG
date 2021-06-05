@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * This class test the client with a server that respond what is expected in protocol
  */
 class ClientGoodServerTest {
-/*
+
    private static Client cli = new Client();
 
    @BeforeAll
@@ -88,7 +88,7 @@ class ClientGoodServerTest {
             if (!cli.isConnected()) { cli.goRight(); }
          }
       });
-   }*/
+   }
 
 }
 

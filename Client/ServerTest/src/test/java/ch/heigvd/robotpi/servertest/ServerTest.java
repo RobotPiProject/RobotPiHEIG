@@ -22,6 +22,11 @@ class ServerTest {
       server.stopExecution();
    }
 
+   /**
+    * Create SSL context
+    * @return SSLContext
+    * @throws Exception
+    */
    private SSLContext initTLS() throws Exception {
             // TrustManagerFactory ()
       KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());

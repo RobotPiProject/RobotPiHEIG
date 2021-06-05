@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * This class test the client with a server that doesn't respond what is expected in protocol
  */
 class ClientBadServerTest {
-   /*private static Client cli = new Client();
+   private static Client cli = new Client();
 
    @BeforeAll
    static void beforeAll() {
@@ -120,6 +120,6 @@ class ClientBadServerTest {
       assertThrows(Client.RobotException.class, () -> {
          cli.goBackwardsLeft();
       });
-   }*/
+   }
 
 }
