@@ -63,19 +63,6 @@ void configure_context(SSL_CTX *ctx)
     }
 }
 
-/**
- * Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
- * @param response the response to be prepared
- * @return the total number of bytes of the response (including the newly added line-terminating character)
- */
-unsigned int prepare_response(char *response)
-{
-    unsigned int res_len = strlen(response);
-    response[res_len] = '\n';
-    res_len++;
-    return res_len;
-}
-
 void print_ssl_err(char *prefix, SSL *ssl, int retcode) {
     int errcode = SSL_get_error(ssl, retcode);
     switch (errcode) {
@@ -110,15 +97,6 @@ void print_ssl_err(char *prefix, SSL *ssl, int retcode) {
     }
 }
 
-/**
- * Read from the given socket until we come across a line-terminating character ('\n')
- * @param prefix a character prefix for the messages printed to the console, useful to determine from where the function was called
- * @param sockfd an open socket from which the next message will be read
- * @param buffer a character buffer used to receive from the socket
- * @param dest a character buffer to which the received message will be copied, up to and not including the line-terminating character
- * @param buffer_size the size of the given character buffer
- * @return the total number of bytes that were received, -1 if there was an error
- */
 int read_msg(char *prefix, SSL *sslCmd, char *buffer, char *dest, size_t buffer_size)
 {
     int bytes_read;
@@ -191,6 +169,14 @@ unsigned int send_msg(char *prefix, SSL *sslCmd, char *msg, size_t msg_len, shor
         fprintf(stderr, "%sCould not send all bytes\n", prefix);
     }
     return bytes_sent;
+}
+
+unsigned int prepare_response(char *response)
+{
+    unsigned int res_len = strlen(response);
+    response[res_len] = '\n';
+    res_len++;
+    return res_len;
 }
 
 void *session_task(void *ssl)

@@ -4,11 +4,24 @@
 
 extern int client_connected;
 
-/**
- * Put the string representation of the given response code in response
- * @param response the CMD_LEN-byte character string the representation will be written into
- * @param response_code the numerical response code
- */
+int shutdown_socket(char *prefix, char *sockdesc, int sockfd) {
+    fprintf(stdout, "[%s] Closing %s socket\n", prefix, sockdesc);
+    int ret = shutdown_inet_stream_socket(sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
+    if (ret == -1) {
+        fprintf(stderr, "[%s] Error closing %s socket: %s\n", prefix, sockdesc, strerror(errno));
+    }
+    return ret;
+}
+
+int destroy_socket(char *prefix, char *sockdesc, int sockfd) {
+    fprintf(stdout, "[%s] Destroying %s socket\n", prefix, sockdesc);
+    int ret = destroy_inet_socket(sockfd);
+    if (ret == -1) {
+        fprintf(stderr, "[%s] Error destroying %s socket: %s\n", prefix, sockdesc, strerror(errno));
+    }
+    return ret;
+}
+
 void put_response(char *response, int response_code) {
     switch (response_code) {
         case CONN_OK:
@@ -65,11 +78,6 @@ void put_response(char *response, int response_code) {
     }
 }
 
-/**
- * Process the command given in cmd, and put the response in response
- * @param cmd pointer to a CMD_LEN-byte char array containing the command
- * @param response pointer to a CMD_LEN-byte char array where the response will be put
- */
 void process_cmd(char *cmd, char *response) {
     int response_code = CMD_ERR;
     if (!strncmp(cmd, "CONN", CMD_LEN)) {
@@ -113,28 +121,30 @@ void process_cmd(char *cmd, char *response) {
     put_response(response, response_code);
 }
 
-int shutdown_socket(char *prefix, char *sockdesc, int sockfd) {
-    fprintf(stdout, "[%s] Closing %s socket\n", prefix, sockdesc);
-    int ret = shutdown_inet_stream_socket(sockfd, LIBSOCKET_WRITE|LIBSOCKET_READ);
-    if (ret == -1) {
-        fprintf(stderr, "[%s] Error closing %s socket: %s\n", prefix, sockdesc, strerror(errno));
+
+unsigned int send_picture(SSL *sslImg, FILE *fp, char *buffer) {
+    fseek(fp, 0, SEEK_END);
+    unsigned long filesize = ftell(fp);
+    rewind(fp);
+    size_t nb_chunks = filesize / BUFFER_SIZE;
+    size_t rem = filesize % BUFFER_SIZE;
+    unsigned int total_bytes_sent = 0;
+    unsigned int bytes_sent = 0;
+    explicit_bzero(buffer, BUFFER_SIZE);
+    for (int i = 0; i < nb_chunks; i++) {
+        fread(buffer, sizeof(char), BUFFER_SIZE, fp);
+        total_bytes_sent += send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
     }
-    return ret;
+    if (rem > 0) {
+        explicit_bzero(buffer, BUFFER_SIZE);
+        fread(buffer, sizeof(char), rem, fp);
+        bytes_sent = send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
+        total_bytes_sent += bytes_sent;
+    }
+    fprintf(stdout,"[pic] Sent %d picture bytes\n", total_bytes_sent);
+    return total_bytes_sent;
 }
 
-int destroy_socket(char *prefix, char *sockdesc, int sockfd) {
-    fprintf(stdout, "[%s] Destroying %s socket\n", prefix, sockdesc);
-    int ret = destroy_inet_socket(sockfd);
-    if (ret == -1) {
-        fprintf(stderr, "[%s] Error destroying %s socket: %s\n", prefix, sockdesc, strerror(errno));
-    }
-    return ret;
-}
-
-/**
- * The thread that is started when the client requests a picture. Take a picture and send it to the client.
- * @param ptr not used
- */
 void *img_task(void *ptr) {
     SSL *sslImg = (SSL*) ptr;
     int img_client_sockfd = 0;
@@ -211,34 +221,4 @@ void *img_task(void *ptr) {
     shutdown_socket("pic", "image server", img_server_sockfd);
     destroy_socket("pic", "image server", img_server_sockfd);
     pthread_exit(NULL);
-}
-
-/**
- * Send a picture using the provided socket file descriptor and file pointer.
- * @param sockfd an open socket through which the picture will be sent
- * @param fp an open file pointer to the picture to send
- * @param buffer the buffer to use when sending the picture through the socket
- * @return the total number of bytes that were sent
- */
-unsigned int send_picture(SSL *sslImg, FILE *fp, char *buffer) {
-    fseek(fp, 0, SEEK_END);
-    unsigned long filesize = ftell(fp);
-    rewind(fp);
-    size_t nb_chunks = filesize / BUFFER_SIZE;
-    size_t rem = filesize % BUFFER_SIZE;
-    unsigned int total_bytes_sent = 0;
-    unsigned int bytes_sent = 0;
-    explicit_bzero(buffer, BUFFER_SIZE);
-    for (int i = 0; i < nb_chunks; i++) {
-        fread(buffer, sizeof(char), BUFFER_SIZE, fp);
-        total_bytes_sent += send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
-    }
-    if (rem > 0) {
-        explicit_bzero(buffer, BUFFER_SIZE);
-        fread(buffer, sizeof(char), rem, fp);
-        bytes_sent = send_msg("[pic] ", sslImg, buffer, BUFFER_SIZE, 0);
-        total_bytes_sent += bytes_sent;
-    }
-    fprintf(stdout,"[pic] Sent %d picture bytes\n", total_bytes_sent);
-    return total_bytes_sent;
 }
