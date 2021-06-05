@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <math.h>
+#include <stdio.h>
 #include <protocol.h>
 
 /* we need to mock motor commands */
@@ -31,12 +33,25 @@ int __wrap_motorInit() {
 }
 void __wrap_motorQuit(){};
 
+/* mock ssl socket communication */
+int __wrap_SSL_read(SSL *ssl, void *buf, int num) {
+    char tmp[num];
+    for (int i = 0; i < num-1; i++) {
+        tmp[i] = 'A' + (i % 26);
+    }
+    tmp[num-1] = '\n';
+    memcpy(buf, tmp, num);
+    return num;
+}
+
 char cmd[CMD_LEN];
 char res[CMD_LEN];
+char buffer[CMD_LEN];
 
 int reset_arrays() {
     explicit_bzero(cmd, CMD_LEN);
     explicit_bzero(res, CMD_LEN);
+    explicit_bzero(buffer, CMD_LEN);
     return 0;
 }
 
@@ -194,6 +209,25 @@ void test_protocol_pic_server(void** state) {
     assert_string_equal(res, "PICTURE_ERR");
 }
 
+/**
+ * @brief Tests that read_msg reads the right number of bytes, and especially not the line-terminating character
+ * @param state not used
+ */
+void test_read_msg_server(void** state) {
+    (void) state; /* osef */
+    SSL *phony;
+    char dest[CMD_LEN];
+    explicit_bzero(dest, CMD_LEN);
+    int nread = read_msg("[TEST] ", phony, buffer, dest, CMD_LEN);
+    assert_int_equal(nread, CMD_LEN);
+    char cmp[CMD_LEN];
+    explicit_bzero(cmp, CMD_LEN);
+    for (int i = 0; i < CMD_LEN-1; i++) {
+        cmp[i] = 'A' + i;
+    }
+    assert_memory_equal(cmp, dest, CMD_LEN);
+}
+
 int main(void) {
     const struct CMUnitTest protocol_normal_test[] = {
             cmocka_unit_test_setup(test_protocol_conn, reset_arrays),
@@ -210,6 +244,7 @@ int main(void) {
             cmocka_unit_test_setup(test_protocol_bl, reset_arrays),
             cmocka_unit_test_setup(test_protocol_br, reset_arrays),
             cmocka_unit_test_setup(test_protocol_pic_server, reset_arrays),
+            cmocka_unit_test_setup(test_read_msg_server, reset_arrays),
     };
 
     return cmocka_run_group_tests(protocol_normal_test, NULL, NULL);
