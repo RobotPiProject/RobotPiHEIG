@@ -1,3 +1,13 @@
+/**
+ * @file test_protocol.c
+ * @brief Test program verifying the correct implementation of the RoboPi protocol. For now, these tests must be run on an arm platform
+ * @author Basile Thullen
+ * @version 0.1
+ * @date 2021-06-05
+ *
+ * @copyright Copyright (c) 2021
+ */
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -30,6 +40,10 @@ int reset_arrays() {
     return 0;
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command CONN
+ * @param state not used
+ */
 void test_protocol_conn(void **state) {
     (void) state; /* osef */
     strncpy(cmd, "CONN", CMD_LEN);
@@ -37,6 +51,10 @@ void test_protocol_conn(void **state) {
     assert_string_equal(res, "CONN_OK");
 }
 
+/**
+ * @brief Tests that the server correctly sets the CMD_ERR response string after receiving an invalid command
+ * @param state not used
+ */
 void test_protocol_cmd_err(void **state) {
     (void) state; /* osef */
     strncpy(cmd, "GARBAGE", CMD_LEN);
@@ -44,6 +62,10 @@ void test_protocol_cmd_err(void **state) {
     assert_string_equal(res, "CMD_ERR");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command DISCONN
+ * @param state not used
+ */
 void test_protocol_disconn(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "DISCONN", CMD_LEN);
@@ -51,6 +73,10 @@ void test_protocol_disconn(void** state) {
     assert_string_equal(res, "DISCONN_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command PING
+ * @param state not used
+ */
 void test_protocol_ping(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "PING", CMD_LEN);
@@ -58,6 +84,10 @@ void test_protocol_ping(void** state) {
     assert_string_equal(res, "PING");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command FWD
+ * @param state not used
+ */
 void test_protocol_fwd(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "FWD", CMD_LEN);
@@ -65,6 +95,10 @@ void test_protocol_fwd(void** state) {
     assert_string_equal(res, "FWD_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command BKWD
+ * @param state not used
+ */
 void test_protocol_bkwd(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "BKWD", CMD_LEN);
@@ -72,6 +106,10 @@ void test_protocol_bkwd(void** state) {
     assert_string_equal(res, "BKWD_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command STOP
+ * @param state not used
+ */
 void test_protocol_stop(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "STOP", CMD_LEN);
@@ -79,6 +117,10 @@ void test_protocol_stop(void** state) {
     assert_string_equal(res, "STOP_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command ROTATE_LEFT
+ * @param state not used
+ */
 void test_protocol_rl(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "ROTATE_LEFT", CMD_LEN);
@@ -86,6 +128,10 @@ void test_protocol_rl(void** state) {
     assert_string_equal(res, "ROTATE_LEFT_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command ROTATE_RIGHT
+ * @param state not used
+ */
 void test_protocol_rr(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "ROTATE_RIGHT", CMD_LEN);
@@ -93,6 +139,10 @@ void test_protocol_rr(void** state) {
     assert_string_equal(res, "ROTATE_RIGHT_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command FRONT_L
+ * @param state not used
+ */
 void test_protocol_fl(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "FRONT_L", CMD_LEN);
@@ -100,6 +150,10 @@ void test_protocol_fl(void** state) {
     assert_string_equal(res, "FRONT_L_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command FRONT_R
+ * @param state not used
+ */
 void test_protocol_fr(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "FRONT_R", CMD_LEN);
@@ -107,6 +161,10 @@ void test_protocol_fr(void** state) {
     assert_string_equal(res, "FRONT_R_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command FRONT_R
+ * @param state not used
+ */
 void test_protocol_bl(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "BCK_L", CMD_LEN);
@@ -114,6 +172,10 @@ void test_protocol_bl(void** state) {
     assert_string_equal(res, "BCK_L_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command BCK_R
+ * @param state not used
+ */
 void test_protocol_br(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "BCK_R", CMD_LEN);
@@ -121,6 +183,10 @@ void test_protocol_br(void** state) {
     assert_string_equal(res, "BCK_R_OK");
 }
 
+/**
+ * @brief Tests that the server sets the correct response string for the command PICTURE
+ * @param state not used
+ */
 void test_protocol_pic_server(void** state) {
     (void) state; /* osef */
     strncpy(cmd, "PICTURE", CMD_LEN);
