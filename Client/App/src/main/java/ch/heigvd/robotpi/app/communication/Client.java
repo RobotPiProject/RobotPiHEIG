@@ -12,13 +12,12 @@ import javax.imageio.ImageIO;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,8 +25,8 @@ import java.util.Set;
  * The type Client.
  */
 public class Client {
-   private static final String[] protocols = new String[]{"TLSv1.3"};
-   private static final String[] cipher_suites = new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
+   private static final String[] PROTOCOLS = new String[]{"TLSv1.3"};
+   private static final String[] CIPHER_SUITES = new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
    /**
     * The Port uses for the communication.
     */
@@ -79,7 +78,7 @@ public class Client {
             clientSocket.close();
             throw new IncorrectDeviceException();
          }
-      } catch (IOException e) {
+      } catch (Exception e) {
          System.err.println(e.toString());
          throw new CantConnectException();
       }
@@ -100,13 +99,22 @@ public class Client {
          throw new CantConnectException();
       }
 
-      try (SSLSocket socketPicture = createSocket(ipAddress, PORTPICTURE)) {
+      PrintWriter outPic = null;
+      BufferedReader inPic = null;
+      SSLSocket socketPicture = null;
+      try {
+         socketPicture = createSocket(ipAddress, PORTPICTURE);
 
-         PrintWriter outPic = new PrintWriter(socketPicture.getOutputStream(), true);
-         BufferedReader inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
+         outPic = new PrintWriter(socketPicture.getOutputStream(), true);
+         inPic = new BufferedReader(new InputStreamReader(socketPicture.getInputStream()));
 
          printSocketInfo(socketPicture);
          socketPicture.startHandshake();
+
+      } catch (Exception e) {
+         System.err.println(e.toString());
+         throw new CantConnectException();
+      }
 
          outPic.print("PICTURE\n");
          outPic.flush();
@@ -129,11 +137,6 @@ public class Client {
          socketPicture.close();
 
          ImageIO.write(bi, "jpg", new File(imagename));
-
-      } catch (IOException e) {
-         System.err.println(e.toString());
-         throw new CantConnectException();
-      }
 
    }
 
@@ -414,9 +417,49 @@ public class Client {
       return isMoving;
    }
 
-   private static SSLSocket createSocket(String host, int port) throws IOException {
-      SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(host, port);
-      socket.setEnabledProtocols(protocols);
+   /**
+    * Create SSL context
+    * @return SSLContext
+    * @throws Exception
+    */
+   private static SSLContext initTLS() throws Exception {
+      // TrustManagerFactory ()
+      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      String password = "robotpi";
+      TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      InputStream inputStream1 = Client.class.getClassLoader().getResourceAsStream("rpTrustStore.jts");
+      trustStore.load(inputStream1, password.toCharArray());
+      trustManagerFactory.init(trustStore);
+      X509TrustManager x509TrustManager = null;
+
+      for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
+         if (trustManager instanceof X509TrustManager) {
+            x509TrustManager = (X509TrustManager) trustManager;
+            break;
+         }
+      }
+
+      if (x509TrustManager == null) throw new NullPointerException();
+
+      // set up the SSL Context
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, new TrustManager[]{x509TrustManager}, null);
+
+      return sslContext;
+   }
+
+   /**
+    * Create SSL socket
+    * @param host IP
+    * @param port port
+    * @return SSLSocket
+    * @throws IOException
+    */
+   private static SSLSocket createSocket(String host, int port) throws Exception {
+      SSLContext sslContext = initTLS();
+      SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+      SSLSocket socket = (SSLSocket) socketFactory.createSocket(host, port);
+      socket.setEnabledProtocols(PROTOCOLS);
       socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
 
       return socket;
