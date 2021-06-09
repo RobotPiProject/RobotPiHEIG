@@ -12,6 +12,8 @@ import javafx.scene.layout.Region;
  * A class that contains general utility functions for the ui
  */
 public final class Util {
+   private Util() {}
+
    /**
     * Creates an alert with the specified alertType, title, header and content. The new window will just wait until it
     * is closed.
