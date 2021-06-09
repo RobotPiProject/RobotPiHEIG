@@ -36,8 +36,9 @@ public class DiscoveryController {
    /**
     * Sets the scene linked to this controller and sets up all of it's components
     *
-    * @param scene  the scene
-    * @param client the client
+    * @param scene          the scene
+    * @param client         the client
+    * @param futurIpAddress the futur ip address
     */
    public void setScene(Scene scene, Client client, TextField futurIpAddress) {
       this.scene = scene;

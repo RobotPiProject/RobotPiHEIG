@@ -38,6 +38,15 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/javadoc</outputDirectory>
+                    <show>package</show>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

@@ -89,9 +89,10 @@ public class Client {
     *
     * @param imagename the path of the image
     *
-    * @throws CantConnectException connexion didn't work on server side
-    * @throws IOException          problem with socket on client side
-    * @throws RobotException       an error on pi robot side occurred
+    * @throws CantConnectException the cant connect exception
+    * @throws RobotException       the robot exception
+    * @throws PictureTransferError the picture transfer error
+    * @throws IOException          the io exception
     */
    public void takePicture(String imagename)
            throws CantConnectException, RobotException, PictureTransferError, IOException {
@@ -141,9 +142,9 @@ public class Client {
    }
 
    /**
-    * Launch service discovery set.
+    * Launch service discovery.
     *
-    * @return the set of ip addresses discovered
+    * @return the set of ip addresses discovered that have the correct type
     *
     * @throws InterruptedException the interrupted exception
     */
@@ -511,6 +512,9 @@ public class Client {
       // par ex si robot envoi mauvaise réponse, pb cote robot en general
    }
 
+   /**
+    * The type Picture transfer error.
+    */
    public class PictureTransferError extends CommException {
       // la photo n'a pas été reçue côté client, l'utilisateur doit la redemander
    }
