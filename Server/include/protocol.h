@@ -35,7 +35,7 @@
 #define LISTENING_IMG_PORT "2026"
 
 /**
- * Shut down the given socket using the shutdown() function from the glibc socket library
+ * @brief Shut down the given socket using the shutdown() function from the glibc socket library
  * @param prefix prefix A character string prefix for the messages printed to the console, useful to determine from where the function was called
  * @param sockdesc A character string giving a description of the socket to be shut down
  * @param sockfd the socket to be shut down
@@ -53,14 +53,14 @@ int shutdown_socket(char *prefix, char *sockdesc, int sockfd);
 int destroy_socket(char *prefix, char *sockdesc, int sockfd);
 
 /**
- * Put the string representation of the given response code in response
+ * @brief Put the string representation of the given response code in response
  * @param response The CMD_LEN-byte character string the representation will be written into
  * @param response_code The numerical response code
  */
 void put_response(char *response, int response_code);
 
 /**
- * Send a picture using the provided socket file descriptor and file pointer.
+ * @brief Send a picture using the provided socket file descriptor and file pointer.
  * @param sockfd An open socket through which the picture will be sent
  * @param fp An open file pointer to the picture to send
  * @param buffer The buffer to use when sending the picture through the socket
@@ -69,14 +69,14 @@ void put_response(char *response, int response_code);
 unsigned int send_picture(SSL *ssl, FILE *fp, char *buffer);
 
 /**
- * Process the command given in cmd, and put the response in response
+ * @brief Process the command given in cmd, and put the response in response
  * @param cmd A pointer to a CMD_LEN-byte char array containing the command
  * @param response A pointer to a CMD_LEN-byte char array where the response will be put
  */
 void process_cmd(char *cmd, char *response);
 
 /**
- * The thread that is started when the client requests a picture. Take a picture and send it to the client.
+ * @brief The thread that is started when the client requests a picture. Take a picture and send it to the client.
  * @param ptr Not used
  */
 void *img_task(void *ptr);
