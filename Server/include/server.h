@@ -25,7 +25,7 @@ SSL_CTX *create_context();
 void configure_context(SSL_CTX *ctx);
 
 /**
- * Pretty-print a human-readable error description for the TLS socket and return code from an SSL function call
+ * @brief Pretty-print a human-readable error description for the TLS socket and return code from an SSL function call
  * @param prefix A character string prefix for the messages printed to the console, useful to determine from where the function was called
  * @param ssl The TLS socket for which a human-readable error description is to be printed
  * @param retcode The return code from the SSL function for which a human-readable error description is to be printed
@@ -33,7 +33,7 @@ void configure_context(SSL_CTX *ctx);
 void print_ssl_err(char *prefix, SSL *ssl, int retcode);
 
 /**
- * Read from the given TLS socket until we come across a line-terminating character ('\n')
+ * @brief Read from the given TLS socket until we come across a line-terminating character ('\n')
  * @param prefix A character string prefix for the messages printed to the console, useful to determine from where the function was called
  * @param ssl An open TLS socket from which the next message will be read
  * @param buffer A character buffer used to receive from the socket
@@ -44,7 +44,7 @@ void print_ssl_err(char *prefix, SSL *ssl, int retcode);
 int read_msg(char *prefix, SSL *ssl, char *buffer, char *dest, size_t buffer_size);
 
 /**
- * Send a message through the given TLS socket
+ * @brief Send a message through the given TLS socket
  * @param prefix A character string prefix for the messages printed to the console, useful to determine from where the function was called
  * @param ssl An open TLS socket through which the message will be sent
  * @param msg A character string containing the message to be sent
@@ -55,21 +55,21 @@ int read_msg(char *prefix, SSL *ssl, char *buffer, char *dest, size_t buffer_siz
 unsigned int send_msg(char *prefix, SSL *ssl, char *msg, size_t msg_len, short log_enable);
 
 /**
- * Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
+ * @brief Prepare a response so that it conforms to the RoboPi protocol, mainly so that the response ends with the correct line-terminating character
  * @param response The response to be prepared
  * @return The total number of bytes of the response (including the newly added line-terminating character)
  */
 unsigned int prepare_response(char *response);
 
 /**
- * The thread that is started each time a new client connects to the server
+ * @brief The thread that is started each time a new client connects to the server
  * @param sockfd
  * @return
  */
 void *session_task(void *ssl);
 
 /**
- * Starts the RoboPi server
+ * @brief Starts the RoboPi server
  * @return should not return anything
  */
 int server();
