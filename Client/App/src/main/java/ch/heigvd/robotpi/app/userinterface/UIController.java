@@ -604,6 +604,9 @@ public class UIController {
       b.setGraphic(i);
    }
 
+   /**
+    * Sets the UI and the worker in disconnected mode
+    */
    private void setDisconnected() {
       LConnectionStatus.setText("Disconnected");
       worker.setDisconnected();
