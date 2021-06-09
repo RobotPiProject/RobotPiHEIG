@@ -5,13 +5,13 @@
     <parent>
         <artifactId>ClientAppRobotPi</artifactId>
         <groupId>ch.heigvd.robotpi</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.heigvd.robotpi.servertest</groupId>
     <artifactId>ServerTest</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
 
 
     <build>
